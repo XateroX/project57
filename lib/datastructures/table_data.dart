@@ -1,21 +1,43 @@
+import 'package:flutter/material.dart';
 import 'package:project57/datastructures/item_data.dart';
 
-class GameTable {
+class GameTable extends ChangeNotifier{
   late List<GameItem> childItems;
+  static int cellCount = 10;
 
   GameTable(
     {
-      List<GameItem>? childItems,
+      this.childItems = const [],
     }
-  ) : childItems = childItems ?? [];
+  ){
+    for (GameItem item in childItems){
+      item.addListener(notifyListeners);
+    }
+  }
+
+  void addItem(GameItem item){
+    childItems.add(item);
+    notifyListeners();
+  }
+
+  void alignItemsToGrid(){
+    for (GameItem item in childItems){
+      item.alignToGrid();
+    }
+  }
 
   static GameTable blank(){
-    return GameTable(
-      childItems: [
-        GameItem(),
-        GameItem(),
-        GameItem(),
-      ]
+    GameTable blankTable = GameTable(
+      childItems: []
     );
+
+    blankTable.addItem(
+      GameItem(
+        parentTable: blankTable,
+        name: "Sword"
+      )
+    );
+
+    return blankTable;
   }
 }

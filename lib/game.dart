@@ -8,7 +8,7 @@ import 'package:project57/components/minimap_component.dart';
 import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
-import 'package:project57/widgets/item.dart';
+import 'package:project57/components/item_component.dart';
 
 class MyFlameGame extends FlameGame with KeyboardEvents {
   double get width => size.x;
@@ -40,7 +40,8 @@ class MyFlameGame extends FlameGame with KeyboardEvents {
       currentRoomPositionindex: gameData.currentRoomPositionindex,
       size: Vector2(squareSize/2, squareSize/2),
       position: Vector2(0, height/4),
-      showGridOverlay: true
+      showGridOverlay: true,
+      debug: true
     );
 
     final MyTableComponent table1 = MyTableComponent(
@@ -48,13 +49,15 @@ class MyFlameGame extends FlameGame with KeyboardEvents {
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
       table: gameData.rooms[0].tables[0],
       relativeRotationIndex: 0,
+      showGridOverlay: true
     );
 
     final MyTableComponent table2 = MyTableComponent(
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
-      table: gameData.rooms[0].tables[0],
+      table: gameData.rooms[0].tables[1],
       relativeRotationIndex: 1,
+      showGridOverlay: true
     );
 
     world.add(background);

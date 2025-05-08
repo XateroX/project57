@@ -70,8 +70,8 @@ List<Offset> getLShapeGridPoints({
     // ..scale(scaleByFactor) // Dont need to scale again, results in a double scale
     ..rotateZ(rotateByRadians);
 
-  for (int i = 0; i <= cols; i++) {
-    for (int j = 0; j <= rows; j++) {
+  for (int j = 0; j <= rows; j++) {
+    for (int i = 0; i <= cols; i++) {
       final Offset point = Offset(i * cellSize, j * cellSize);
       final vector64.Vector3 v = vector64.Vector3(point.dx, point.dy, 0);
       v.applyMatrix4(transformSansRotate);

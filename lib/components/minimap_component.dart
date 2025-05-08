@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:vector_math/vector_math.dart' as vector;
@@ -35,6 +36,42 @@ class MyMinimapComponent extends PositionComponent {
   @override
   Future<void> onLoad() async {
     super.onLoad();
+
+    double squareSize = min(width,height); 
+
+    MyTableComponent tableA = MyTableComponent(
+      size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
+      position: Vector2(-squareSize /4, -squareSize /4),
+      table: roomsData[0].tables[0],
+      relativeRotationIndex: 0,
+      showGridOverlay: showGridOverlay,
+      debug: debug
+    );
+    MyTableComponent tableB = MyTableComponent(
+      size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
+      position: Vector2(squareSize /4, -squareSize /4),
+      table: roomsData[0].tables[1],
+      relativeRotationIndex: 1,
+      showGridOverlay: showGridOverlay,
+      debug: debug
+    );
+    MyTableComponent tableC = MyTableComponent(
+      size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
+      position: Vector2(squareSize /4, squareSize /4),
+      table: roomsData[0].tables[2],
+      relativeRotationIndex: 2,
+      showGridOverlay: showGridOverlay,
+      debug: debug
+    );
+    MyTableComponent tableD = MyTableComponent(
+      size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
+      position: Vector2(-squareSize /4, squareSize /4),
+      table: roomsData[0].tables[3],
+      relativeRotationIndex: 3,
+      showGridOverlay: showGridOverlay,
+      debug: debug
+    );
+    addAll([tableA, tableB, tableC, tableD]);
   }
 
   @override 
@@ -51,7 +88,6 @@ class MyMinimapComponent extends PositionComponent {
       Paint()..color = Colors.white
     );
 
-    _drawTables(canvas);
     _drawPlayerHotSpots(canvas);
     _drawRoomDoors(canvas);
 
@@ -66,76 +102,6 @@ class MyMinimapComponent extends PositionComponent {
         ..style = PaintingStyle.stroke
         ..strokeWidth = width/100
     );
-  }
-
-  void _drawTables(Canvas canvas){
-    // create and draw the tables //
-
-    // create base L-shape
-    Path lShapedPath = Path();
-    lShapedPath.moveTo(0,0);
-    lShapedPath.lineTo(width,0);
-    lShapedPath.lineTo(width,height/2);
-    lShapedPath.lineTo(width/2,height/2);
-    lShapedPath.lineTo(width/2,height);
-    lShapedPath.lineTo(0,height);
-    lShapedPath.close();
-
-    // matrices to transform the tables
-    final vector64.Matrix4 rotationMat = vector64.Matrix4.rotationZ(pi/2);
-    final vector64.Matrix4 shrinkMat = vector64.Matrix4.identity()..scale(0.4);
-    final Float64List rotationBuffer = rotationMat.storage;
-    final Float64List shrinkBuffer = shrinkMat.storage;
-
-    // create the 4 different tables
-    lShapedPath = lShapedPath.transform(shrinkBuffer);
-    lShapedPath = lShapedPath.shift(Offset(-width/2.1, -height/2.1));
-
-    Path tableApath = getLShapedPath(
-      width, 
-      height,
-      rotateByRadians: 0,
-      scaleByFactor: scaleFactor,
-      shiftByOffset: Offset(-width/2.1, -height/2.1)
-    );
-    Path tableBpath = getLShapedPath(
-      width, 
-      height,
-      rotateByRadians: pi/2,
-      scaleByFactor: scaleFactor,
-      shiftByOffset: Offset(-width/2.1, -height/2.1)
-    );
-    Path tableCpath = getLShapedPath(
-      width, 
-      height,
-      rotateByRadians: 2 * pi/2,
-      scaleByFactor: scaleFactor,
-      shiftByOffset: Offset(-width/2.1, -height/2.1)
-    );
-    Path tableDpath = getLShapedPath(
-      width, 
-      height,
-      rotateByRadians: 3 * pi/2,
-      scaleByFactor: scaleFactor,
-      shiftByOffset: Offset(-width/2.1, -height/2.1)
-    );
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width/100;
-
-    // draw the tables
-    canvas.drawPath(tableApath, paint);
-    canvas.drawPath(tableBpath, paint);
-    canvas.drawPath(tableCpath, paint);
-    canvas.drawPath(tableDpath, paint);
-
-    if (debug) {
-      _showDebugInfo(canvas);
-    }
-    if (showGridOverlay){
-      _showGridOverlay(canvas);
-    }
   }
 
   void _drawPlayerHotSpots(Canvas canvas){
