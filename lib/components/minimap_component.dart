@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/game_room_data.dart';
+import 'package:project57/utils/geometry.dart';
 import 'package:vector_math/vector_math.dart' as vector;
 import 'package:vector_math/vector_math_64.dart' as vector64;
 
@@ -12,14 +13,24 @@ class MyMinimapComponent extends PositionComponent {
   List<GameRoomData> roomsData;
   int? currentRoomIndex;
   int? currentRoomPositionindex;
+  bool debug;
+  bool showGridOverlay;
+
+  int cellRatio = 10;
+  double scaleFactor = 0.4;
+  late double localCellSize;
 
   MyMinimapComponent({
     required this.roomsData,
     required this.currentRoomIndex,
     required this.currentRoomPositionindex,
     required super.size,
-    required super.position
-  });
+    required super.position,
+    this.showGridOverlay = false,
+    this.debug = false
+  }){
+    localCellSize = scaleFactor * width/cellRatio;
+  }
 
   @override
   Future<void> onLoad() async {
@@ -43,6 +54,18 @@ class MyMinimapComponent extends PositionComponent {
     _drawTables(canvas);
     _drawPlayerHotSpots(canvas);
     _drawRoomDoors(canvas);
+
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(0,0), 
+        width: width, 
+        height: height
+      ), 
+      Paint()
+        ..color = Colors.grey
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width/100
+    );
   }
 
   void _drawTables(Canvas canvas){
@@ -68,10 +91,34 @@ class MyMinimapComponent extends PositionComponent {
     lShapedPath = lShapedPath.transform(shrinkBuffer);
     lShapedPath = lShapedPath.shift(Offset(-width/2.1, -height/2.1));
 
-    Path tableApath = lShapedPath;
-    Path tableBpath = tableApath.transform(rotationBuffer);
-    Path tableCpath = tableBpath.transform(rotationBuffer);
-    Path tableDpath = tableCpath.transform(rotationBuffer);
+    Path tableApath = getLShapedPath(
+      width, 
+      height,
+      rotateByRadians: 0,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    Path tableBpath = getLShapedPath(
+      width, 
+      height,
+      rotateByRadians: pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    Path tableCpath = getLShapedPath(
+      width, 
+      height,
+      rotateByRadians: 2 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    Path tableDpath = getLShapedPath(
+      width, 
+      height,
+      rotateByRadians: 3 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
@@ -82,6 +129,13 @@ class MyMinimapComponent extends PositionComponent {
     canvas.drawPath(tableBpath, paint);
     canvas.drawPath(tableCpath, paint);
     canvas.drawPath(tableDpath, paint);
+
+    if (debug) {
+      _showDebugInfo(canvas);
+    }
+    if (showGridOverlay){
+      _showGridOverlay(canvas);
+    }
   }
 
   void _drawPlayerHotSpots(Canvas canvas){
@@ -154,5 +208,99 @@ class MyMinimapComponent extends PositionComponent {
     canvas.drawPath(doorBpath, doorPaint);
     canvas.drawPath(doorCpath, doorPaint);
     canvas.drawPath(doorDpath, doorPaint);
+  }
+
+  void _showDebugInfo(Canvas canvas){
+    List<Offset> pointsA = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 0,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsB = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsC = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 2 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsD = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 3 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+
+    for (Offset point in pointsA){
+      canvas.drawCircle(point, scaleFactor * width/200, Paint()..color = Colors.black);
+    }
+    for (Offset point in pointsB){
+      canvas.drawCircle(point, scaleFactor * width/200, Paint()..color = Colors.black);
+    }
+    for (Offset point in pointsC){
+      canvas.drawCircle(point, scaleFactor * width/200, Paint()..color = Colors.black);
+    }
+    for (Offset point in pointsD){
+      canvas.drawCircle(point, scaleFactor * width/200, Paint()..color = Colors.black);
+    }
+  }
+
+  void _showGridOverlay(Canvas canvas){
+    List<Offset> pointsA = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 0,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsB = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsC = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 2 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+    List<Offset> pointsD = getLShapeGridPoints(
+      cellSize: 1/cellRatio,
+      width: width, 
+      height: height,
+      rotateByRadians: 3 * pi/2,
+      scaleByFactor: scaleFactor,
+      shiftByOffset: Offset(-width/2.1, -height/2.1)
+    );
+
+    for (List<Offset> pointList in [pointsA, pointsB, pointsC, pointsD]){
+      for (Offset point in pointList){
+        canvas.drawRect(Rect.fromCenter(center: point, width: localCellSize, height: localCellSize), 
+        Paint()
+          ..color = Colors.grey
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = scaleFactor * width/300
+        );
+      }
+    }
   }
 }

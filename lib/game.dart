@@ -23,7 +23,7 @@ class MyFlameGame extends FlameGame with KeyboardEvents {
     camera.viewfinder.anchor = Anchor.center;
     // shift the camera to the center of the screen
     // Set the camera to center on (0, 0)
-    camera.viewfinder.position = Vector2(0,0);
+    camera.viewfinder.position = Vector2(0,height/15);
 
     final background = RectangleComponent(
       size: Vector2(width, height), // width and height
@@ -38,12 +38,29 @@ class MyFlameGame extends FlameGame with KeyboardEvents {
       roomsData: gameData.rooms,
       currentRoomIndex: gameData.currentRoomIndex,
       currentRoomPositionindex: gameData.currentRoomPositionindex,
-      size: Vector2(squareSize/2, squareSize/2), // width and height
-      position: Vector2(0, height/4), // position on the canvas
+      size: Vector2(squareSize/2, squareSize/2),
+      position: Vector2(0, height/4),
+      showGridOverlay: true
+    );
+
+    final MyTableComponent table1 = MyTableComponent(
+      size: Vector2(3*squareSize/5,3*squareSize/5),
+      position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
+      table: gameData.rooms[0].tables[0],
+      relativeRotationIndex: 0,
+    );
+
+    final MyTableComponent table2 = MyTableComponent(
+      size: Vector2(3*squareSize/5,3*squareSize/5),
+      position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
+      table: gameData.rooms[0].tables[0],
+      relativeRotationIndex: 1,
     );
 
     world.add(background);
     world.add(minimap);
+    world.add(table1);
+    world.add(table2);
 
 
     // make the camera follow something
