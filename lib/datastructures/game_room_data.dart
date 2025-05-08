@@ -21,10 +21,10 @@ class GameRoomData extends ChangeNotifier {
       this.tables = tables;
     } else {
       this.tables = [
-        GameTable.blank(),
-        GameTable(),
-        GameTable(),
-        GameTable(),
+        GameTable.blank(0),
+        GameTable.blank(1),
+        GameTable.blank(2),
+        GameTable.blank(3),
       ];
 
       for (GameTable table in this.tables){

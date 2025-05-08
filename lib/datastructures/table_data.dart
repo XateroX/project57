@@ -4,9 +4,11 @@ import 'package:project57/datastructures/item_data.dart';
 class GameTable extends ChangeNotifier{
   late List<GameItem> childItems;
   static int cellCount = 10;
+  int relativeRotationIndex;
 
   GameTable(
     {
+      required this.relativeRotationIndex,
       this.childItems = const [],
     }
   ){
@@ -26,8 +28,9 @@ class GameTable extends ChangeNotifier{
     }
   }
 
-  static GameTable blank(){
+  static GameTable blank(int relativeRotationIndex){
     GameTable blankTable = GameTable(
+      relativeRotationIndex: relativeRotationIndex,
       childItems: []
     );
 

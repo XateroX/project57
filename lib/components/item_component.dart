@@ -11,10 +11,12 @@ class MyItemComponent extends RectangleComponent with DragCallbacks {
   late Vector2 _basePosition;
   GameItem item;
   List<Offset> points = [];
+  Offset baseOffset;
 
   MyItemComponent({
     required this.item,
     required this.points,
+    required this.baseOffset,
     super.size,
     super.paint,
     super.position 
@@ -23,11 +25,11 @@ class MyItemComponent extends RectangleComponent with DragCallbacks {
   }
 
   void _onItemDataChanged(){
-    Offset positionOffset = Offset(0,0);
+    Offset positionOffset = Offset(0, 0);
     if (item.posOffset != Offset(0,0)){
       positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
     } else {
-      positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points[item.pos.item1 * (GameTable.cellCount-1) + item.pos.item2];
+      positionOffset = baseOffset + Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points[item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1];
     }
     position = Vector2(positionOffset.dx,positionOffset.dy);
   }

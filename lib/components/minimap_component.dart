@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_room_data.dart';
@@ -10,7 +11,10 @@ import 'package:project57/utils/geometry.dart';
 import 'package:vector_math/vector_math.dart' as vector;
 import 'package:vector_math/vector_math_64.dart' as vector64;
 
-class MyMinimapComponent extends PositionComponent {
+class MyMinimapComponent extends PositionComponent with TapCallbacks {
+  @override
+  bool debugMode = true;
+  
   List<GameRoomData> roomsData;
   int? currentRoomIndex;
   int? currentRoomPositionindex;
@@ -34,14 +38,23 @@ class MyMinimapComponent extends PositionComponent {
   }
 
   @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+    print('Tapped on: $this');
+    print('Position: ${event.canvasPosition}');
+  }
+
+  @override
   Future<void> onLoad() async {
     super.onLoad();
+
+    anchor = Anchor.center;
 
     double squareSize = min(width,height); 
 
     MyTableComponent tableA = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
-      position: Vector2(-squareSize /4, -squareSize /4),
+      position: Vector2(-squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
       table: roomsData[0].tables[0],
       relativeRotationIndex: 0,
       showGridOverlay: showGridOverlay,
@@ -49,7 +62,7 @@ class MyMinimapComponent extends PositionComponent {
     );
     MyTableComponent tableB = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
-      position: Vector2(squareSize /4, -squareSize /4),
+      position: Vector2(squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
       table: roomsData[0].tables[1],
       relativeRotationIndex: 1,
       showGridOverlay: showGridOverlay,
@@ -57,7 +70,7 @@ class MyMinimapComponent extends PositionComponent {
     );
     MyTableComponent tableC = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
-      position: Vector2(squareSize /4, squareSize /4),
+      position: Vector2(squareSize /4, squareSize /4) + Vector2(width/2,height/2),
       table: roomsData[0].tables[2],
       relativeRotationIndex: 2,
       showGridOverlay: showGridOverlay,
@@ -65,7 +78,7 @@ class MyMinimapComponent extends PositionComponent {
     );
     MyTableComponent tableD = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
-      position: Vector2(-squareSize /4, squareSize /4),
+      position: Vector2(-squareSize /4, squareSize /4) + Vector2(width/2,height/2),
       table: roomsData[0].tables[3],
       relativeRotationIndex: 3,
       showGridOverlay: showGridOverlay,
@@ -77,6 +90,8 @@ class MyMinimapComponent extends PositionComponent {
   @override 
   void render(Canvas canvas) {
     super.render(canvas);
+
+    canvas.translate(width/2, height/2);
 
     // background
     canvas.drawRect(
@@ -102,6 +117,8 @@ class MyMinimapComponent extends PositionComponent {
         ..style = PaintingStyle.stroke
         ..strokeWidth = width/100
     );
+
+    canvas.translate(-width/2, -height/2);
   }
 
   void _drawPlayerHotSpots(Canvas canvas){

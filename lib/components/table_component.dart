@@ -7,6 +7,7 @@ import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:project57/components/item_component.dart';
+import 'package:tuple/tuple.dart';
 
 class MyTableComponent extends PositionComponent {
   late final GameTable table;
@@ -48,14 +49,20 @@ class MyTableComponent extends PositionComponent {
   FutureOr<void> onLoad() {
     super.onLoad();
 
+    anchor = Anchor.center;
+
     for (GameItem item in table.childItems){
-      Offset positionOffset = item.posOffset + points[item.pos.item1 * GameTable.cellCount + item.pos.item2];
+      Offset positionOffset = 
+        item.posOffset 
+        + points[item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1]
+        + Offset(width/2,height/2);
       MyItemComponent itemComponent = MyItemComponent(
         item: item,
         points: points,
         size: Vector2(width/GameTable.cellCount, width/GameTable.cellCount), 
         paint: Paint()..color = Colors.blue,
-        position: Vector2(positionOffset.dx,positionOffset.dy)
+        position: Vector2(positionOffset.dx,positionOffset.dy),
+        baseOffset: Offset(width/2,height/2)
       );
       add(itemComponent);
     }
@@ -65,25 +72,54 @@ class MyTableComponent extends PositionComponent {
   void render(Canvas canvas){
     super.render(canvas);
 
+    canvas.translate(width/2, height/2);
+
     canvas.drawPath(
-      path, Paint()
+      path, 
+      Paint()
         ..color = Colors.white
     );
 
     if (debug){
       for (Offset point in points){
-        canvas.drawCircle(point, width/200, Paint()..color = Colors.black);
+        Offset relativeOffset = Offset(point.dx/(width/GameTable.cellCount),point.dy/(height/GameTable.cellCount));
+        Tuple2<int,int> pos = Tuple2(
+          (4+relativeOffset.dx).round().clamp(0, 8),
+          (4+relativeOffset.dy).round().clamp(0, 8),
+        );
+
+        Tuple2<int,int> badness = getBadness(relativeRotationIndex, pos);
+
+        if (
+          !(badness.item1 >= 0 && badness.item2 >= 0)
+        ){
+          canvas.drawCircle(point, width/200, Paint()..color = Colors.black);
+        }
       }
     }
 
     if (showGridOverlay){
       for (Offset point in points){
-        canvas.drawRect(Rect.fromCenter(center: point, width: width/GameTable.cellCount, height: width/GameTable.cellCount), 
-        Paint()
-          ..color = Colors.grey
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = width/300
+        Offset relativeOffset = Offset(point.dx/(width/GameTable.cellCount),point.dy/(height/GameTable.cellCount));
+        Tuple2<int,int> pos = Tuple2(
+          (4+relativeOffset.dx).round().clamp(0, 8),
+          (4+relativeOffset.dy).round().clamp(0, 8),
         );
+
+        Tuple2<int,int> badness = getBadness(relativeRotationIndex, pos);
+
+        if (
+          !(badness.item1 >= 0 && badness.item2 >= 0)
+        ){
+          canvas.drawRect(Rect.fromCenter(center: point, width: width/GameTable.cellCount, height: width/GameTable.cellCount), 
+            Paint()
+              ..color = Colors.grey
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = width/300
+          );
+        } else {
+
+        }
       }
     }
 
@@ -93,5 +129,7 @@ class MyTableComponent extends PositionComponent {
         ..style = PaintingStyle.stroke
         ..strokeWidth = width/100
     );
+
+    canvas.translate(-width/2, -height/2);
   }
 }

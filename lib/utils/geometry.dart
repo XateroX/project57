@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:tuple/tuple.dart';
 import 'package:vector_math/vector_math_64.dart' as vector64;
 
 Path getLShapedPath(
@@ -33,6 +34,8 @@ Path getLShapedPath(
   lShapedPath = lShapedPath.transform(shrinkBuffer);
   lShapedPath = lShapedPath.shift(shiftByOffset);
   lShapedPath = lShapedPath.transform(rotationBuffer);
+
+  // lShapedPath = lShapedPath.shift(Offset(width/2,height/2));
 
   return lShapedPath;
 }
@@ -70,19 +73,19 @@ List<Offset> getLShapeGridPoints({
     // ..scale(scaleByFactor) // Dont need to scale again, results in a double scale
     ..rotateZ(rotateByRadians);
 
-  for (int j = 0; j <= rows; j++) {
-    for (int i = 0; i <= cols; i++) {
+  for (int j = 1; j <= rows-1; j++) {
+    for (int i = 1; i <= cols-1; i++) {
       final Offset point = Offset(i * cellSize, j * cellSize);
       final vector64.Vector3 v = vector64.Vector3(point.dx, point.dy, 0);
       v.applyMatrix4(transformSansRotate);
 
       // Check if this point is inside the original L shape
-      if (lShape.contains(Offset(v.x, v.y))) {
-        if (!isPointOnPathEdge(lShape, Offset(v.x, v.y), tolerance: 2)) {
+      // if (lShape.contains(Offset(v.x, v.y))) {
+      //   if (!isPointOnPathEdge(lShape, Offset(v.x, v.y), tolerance: 2)) {
           v.applyMatrix4(transformRotate);
           gridPoints.add(Offset(v.x, v.y));
-        }
-      }
+      //   }
+      // }
     }
   }
 
@@ -130,4 +133,33 @@ double _distanceFromPointToLineSegment(Offset p, Offset a, Offset b) {
   final t = (ab2 != 0) ? (apDotAb / ab2).clamp(0.0, 1.0) : 0.0;
   final closest = Offset(a.dx + ab.dx * t, a.dy + ab.dy * t);
   return (p - closest).distance;
+}
+
+Tuple2<int, int> getBadSector(int relativeRotationIndex) {
+  switch (relativeRotationIndex) {
+    case 0:
+      return const Tuple2(1, 1);
+    case 1:
+      return const Tuple2(-1, 1);
+    case 2:
+      return const Tuple2(-1, -1);
+    case 3:
+      return const Tuple2(1, -1);
+    default:
+      return const Tuple2(0, 0);
+  }
+}
+
+Tuple2<int,int> getBadness(int relativeRotationIndex, Tuple2<int,int> pos){
+  Tuple2<int,int> badSector = getBadSector(relativeRotationIndex);
+
+  // Measure how far into the bad zone each axis is
+  int badnessX = badSector.item1 != 0
+    ? (badSector.item1 > 0 ? pos.item1 - 4 : 4 - pos.item1)
+    : 0;
+
+  int badnessY = badSector.item2 != 0
+    ? (badSector.item2 > 0 ? pos.item2 - 4 : 4 - pos.item2)
+    : 0;
+  return Tuple2(badnessX, badnessY);
 }
