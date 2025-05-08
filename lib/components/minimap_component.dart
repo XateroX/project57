@@ -12,9 +12,10 @@ import 'package:vector_math/vector_math.dart' as vector;
 import 'package:vector_math/vector_math_64.dart' as vector64;
 
 class MyMinimapComponent extends PositionComponent with TapCallbacks {
-  @override
-  bool debugMode = true;
+  // @override
+  // bool debugMode = true;
   
+  void Function(int) setCurrentRoomPositionindex;
   List<GameRoomData> roomsData;
   int? currentRoomIndex;
   int? currentRoomPositionindex;
@@ -26,6 +27,7 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
   late double localCellSize;
 
   MyMinimapComponent({
+    required this.setCurrentRoomPositionindex,
     required this.roomsData,
     required this.currentRoomIndex,
     required this.currentRoomPositionindex,
@@ -40,46 +42,87 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
   @override
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
-    print('Tapped on: $this');
-    print('Position: ${event.canvasPosition}');
+    // print('Tapped on: $this');
+    print('Position: ${event.localPosition}');
+
+    vector64.Vector4 baseOffset = vector64.Vector4(absoluteCenter.x-absoluteTopLeftPosition.x,absoluteCenter.y-absoluteTopLeftPosition.y,0,0);
+    vector64.Vector4 pointerOffset = vector64.Vector4(0,-height/10,0,0);
+    vector64.Matrix4 rotationMat = vector64.Matrix4.rotationZ(pi/2);
+    
+    vector64.Vector4 buttonAOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 buttonBOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 buttonCOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 buttonDOffset = baseOffset + pointerOffset;
+    
+
+    if (event.localPosition.distanceTo(Vector2(buttonAOffset.x, buttonAOffset.y)) < width/50) {
+      print("CLICKED A");
+      setCurrentRoomPositionindex(0);
+      currentRoomPositionindex = 0;
+    }
+    if (event.localPosition.distanceTo(Vector2(buttonBOffset.x, buttonBOffset.y)) < width/50) {
+      print("CLICKED B");
+      setCurrentRoomPositionindex(1);
+      currentRoomPositionindex = 1;
+    }
+    if (event.localPosition.distanceTo(Vector2(buttonCOffset.x, buttonCOffset.y)) < width/50) {
+      print("CLICKED C");
+      setCurrentRoomPositionindex(2);
+      currentRoomPositionindex = 2;
+    }
+    if (event.localPosition.distanceTo(Vector2(buttonDOffset.x, buttonDOffset.y)) < width/50) {
+      print("CLICKED D");
+      setCurrentRoomPositionindex(3);
+      currentRoomPositionindex = 3;
+    }
   }
+
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
-
     anchor = Anchor.center;
 
     double squareSize = min(width,height); 
-
-    MyTableComponent tableA = MyTableComponent(
+    final MyTableComponent tableA = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(-squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
-      table: roomsData[0].tables[0],
+      rooms: roomsData,
+      roomIndex: 0,
+      tableIndex: 0,
       relativeRotationIndex: 0,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
-    MyTableComponent tableB = MyTableComponent(
+    final MyTableComponent tableB = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
-      table: roomsData[0].tables[1],
+      rooms: roomsData,
+      roomIndex: 0,
+      tableIndex: 1,
       relativeRotationIndex: 1,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
-    MyTableComponent tableC = MyTableComponent(
+    final MyTableComponent tableC = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(squareSize /4, squareSize /4) + Vector2(width/2,height/2),
-      table: roomsData[0].tables[2],
+      rooms: roomsData,
+      roomIndex: 0,
+      tableIndex: 2,
       relativeRotationIndex: 2,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
-    MyTableComponent tableD = MyTableComponent(
+    final MyTableComponent tableD = MyTableComponent(
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(-squareSize /4, squareSize /4) + Vector2(width/2,height/2),
-      table: roomsData[0].tables[3],
+      rooms: roomsData,
+      roomIndex: 0,
+      tableIndex: 3,
       relativeRotationIndex: 3,
       showGridOverlay: showGridOverlay,
       debug: debug

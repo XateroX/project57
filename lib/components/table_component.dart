@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
@@ -10,7 +11,10 @@ import 'package:project57/components/item_component.dart';
 import 'package:tuple/tuple.dart';
 
 class MyTableComponent extends PositionComponent {
-  late final GameTable table;
+  late GameTable table;
+  List<GameRoomData> rooms;
+  int roomIndex;
+  int tableIndex;
   int relativeRotationIndex;
   bool debug;
   bool showGridOverlay;
@@ -22,11 +26,15 @@ class MyTableComponent extends PositionComponent {
   MyTableComponent({
     required super.size,
     required super.position,
-    required this.table,
+    required this.rooms,
+    required this.roomIndex,
+    required this.tableIndex,
     required this.relativeRotationIndex,
     this.debug = false,
     this.showGridOverlay = false
   }){
+    table = rooms[roomIndex].tables[tableIndex];
+
     path = getLShapedPath(
       width, 
       height,
@@ -66,6 +74,14 @@ class MyTableComponent extends PositionComponent {
       );
       add(itemComponent);
     }
+  }
+
+  void updateTableIndex(int newIndex){
+    tableIndex = newIndex;
+    table = rooms[roomIndex].tables[tableIndex];
+
+    children.clear();
+    onLoad();
   }
 
   @override

@@ -35,19 +35,21 @@ class MyFlameGame extends FlameGame with KeyboardEvents, TapCallbacks  {
     gameData.addInitialroom();
 
     final MyMinimapComponent minimap = MyMinimapComponent(
+      setCurrentRoomPositionindex: gameData.setCurrentRoomPositionindex,
       roomsData: gameData.rooms,
-      currentRoomIndex: gameData.currentRoomIndex,
-      currentRoomPositionindex: gameData.currentRoomPositionindex,
+      currentRoomIndex: gameData.currentRoomIndex?.value,
+      currentRoomPositionindex: gameData.currentRoomPositionindex?.value,
       size: Vector2(squareSize/2, squareSize/2),
       position: Vector2(0, height/4),
       showGridOverlay: true,
-      debug: true
     );
 
     final MyTableComponent table1 = MyTableComponent(
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
-      table: gameData.rooms[0].tables[0],
+      rooms: gameData.rooms,
+      roomIndex: 0,
+      tableIndex: gameData.currentRoomPositionindex!.value,
       relativeRotationIndex: 0,
       showGridOverlay: true
     );
@@ -55,7 +57,9 @@ class MyFlameGame extends FlameGame with KeyboardEvents, TapCallbacks  {
     final MyTableComponent table2 = MyTableComponent(
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
-      table: gameData.rooms[0].tables[1],
+      rooms: gameData.rooms,
+      roomIndex: 0,
+      tableIndex: (gameData.currentRoomPositionindex!.value+1)%4,
       relativeRotationIndex: 1,
       showGridOverlay: true
     );
@@ -65,6 +69,11 @@ class MyFlameGame extends FlameGame with KeyboardEvents, TapCallbacks  {
     world.add(table1);
     world.add(table2);
 
+    // 🔁 Listen to changes and update table indices
+    gameData.currentRoomPositionindex!.addListener(() {
+      table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
+      table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
+    });
 
     // make the camera follow something
     // camera.follow();

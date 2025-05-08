@@ -4,8 +4,8 @@ import 'package:project57/datastructures/table_data.dart';
 
 class GameOverallData extends ChangeNotifier {
   List<GameRoomData> rooms = [];
-  int? currentRoomIndex;
-  int? currentRoomPositionindex;
+  ValueNotifier<int>? currentRoomIndex;
+  ValueNotifier<int>? currentRoomPositionindex;
 
   void addInitialroom(){
     if (rooms.isNotEmpty) {
@@ -14,9 +14,14 @@ class GameOverallData extends ChangeNotifier {
       GameRoomData initialRoom = GameRoomData(); 
       initialRoom.addListener(notifyListeners);
       rooms.add(initialRoom);
-      currentRoomIndex = 0;
-      currentRoomPositionindex = 0;
+      currentRoomIndex = ValueNotifier(0);
+      currentRoomPositionindex = ValueNotifier(0);
     }
+  }
+
+  void setCurrentRoomPositionindex(int newIndex){
+    currentRoomPositionindex!.value = newIndex;
+    notifyListeners();
   }
 }
 
