@@ -9,8 +9,11 @@ import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/components/item_component.dart';
+import 'package:project57/datastructures/item_data.dart';
 
-class MyFlameGame extends FlameGame with KeyboardEvents, TapCallbacks  {
+class MyFlameGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks  {
+  MyItemComponent? currentlyDraggedComponent;
+
   double get width => size.x;
   double get height => size.y;
   GameOverallData gameData = GameOverallData();

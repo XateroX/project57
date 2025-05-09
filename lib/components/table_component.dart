@@ -67,8 +67,8 @@ class MyTableComponent extends PositionComponent {
       MyItemComponent itemComponent = MyItemComponent(
         item: item,
         points: points,
-        size: Vector2(width/GameTable.cellCount, width/GameTable.cellCount), 
-        paint: Paint()..color = Colors.blue,
+        size: Vector2(width/GameTable.cellCount, width/GameTable.cellCount),
+        relativeRotationIndex: relativeRotationIndex,
         position: Vector2(positionOffset.dx,positionOffset.dy),
         baseOffset: Offset(width/2,height/2)
       );

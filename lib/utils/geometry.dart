@@ -163,3 +163,15 @@ Tuple2<int,int> getBadness(int relativeRotationIndex, Tuple2<int,int> pos){
     : 0;
   return Tuple2(badnessX, badnessY);
 }
+
+Offset relativeRotationOffset(Offset offset, int relativeRotationIndex){
+  // rotate the calculated coords to match the rotation
+  offset = switch (relativeRotationIndex) {
+    0 => Offset(offset.dx, offset.dy),
+    1 => Offset(offset.dy, offset.dx),
+    2 => Offset(-offset.dx, -offset.dy),
+    3 => Offset(-offset.dy, -offset.dx),
+    _ => Offset(offset.dx, offset.dy),
+  };
+  return offset;
+}

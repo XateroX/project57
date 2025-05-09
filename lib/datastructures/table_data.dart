@@ -22,8 +22,9 @@ class GameTable extends ChangeNotifier{
     notifyListeners();
   }
 
-  void alignItemsToGrid(){
-    for (GameItem item in childItems){
+
+  void alignItemsToGrid(List<GameItem> itemsToAlign){
+    for (GameItem item in itemsToAlign){
       item.alignToGrid();
     }
   }
@@ -38,6 +39,19 @@ class GameTable extends ChangeNotifier{
       GameItem(
         parentTable: blankTable,
         name: "Sword"
+      )
+    );
+    blankTable.addItem(
+      GameItem(
+        parentTable: blankTable,
+        name: "Herbs"
+      )
+    );
+    blankTable.addItem(
+      GameItem(
+        parentTable: blankTable,
+        name: "Iron Pot",
+        isMachine: true
       )
     );
 

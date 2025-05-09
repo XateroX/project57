@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
+import 'package:uuid/uuid.dart';
 
 class GameItem extends ChangeNotifier {
+  late String id;
+
+  // machine variables
+  bool isMachine;
+  Tuple2<int,int> inputOffset;
+  Tuple2<int,int> outputOffset;
+
   String name;
   // grid indices
   Tuple2<int,int> pos = const Tuple2(0,0);
@@ -11,10 +19,20 @@ class GameItem extends ChangeNotifier {
   Offset posOffset = Offset(0,0);
   GameTable? parentTable;
 
+  // rotation
+  int relativeRotationIndex;
+
   GameItem({
     required this.parentTable,
-    this.name = ""
-  });
+    this.name = "",
+    this.isMachine = false,
+    this.inputOffset = const Tuple2(-1,0),
+    this.outputOffset = const Tuple2(1,0),
+    this.relativeRotationIndex = 0,
+  }){
+    id = Uuid().v4();
+    name += id[0];
+  }
 
   void alignToGrid(){
     pos = Tuple2(
