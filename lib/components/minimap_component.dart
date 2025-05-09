@@ -6,8 +6,10 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/components/table_component.dart';
+import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/utils/geometry.dart';
+import 'package:tuple/tuple.dart';
 import 'package:vector_math/vector_math.dart' as vector;
 import 'package:vector_math/vector_math_64.dart' as vector64;
 
@@ -16,6 +18,8 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
   // bool debugMode = true;
   
   void Function(int) setCurrentRoomPositionindex;
+  void Function(int) moveToRoomIndex;
+  GameOverallData gameData;
   List<GameRoomData> roomsData;
   int? currentRoomIndex;
   int? currentRoomPositionindex;
@@ -27,7 +31,9 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
   late double localCellSize;
 
   MyMinimapComponent({
+    required this.gameData,
     required this.setCurrentRoomPositionindex,
+    required this.moveToRoomIndex,
     required this.roomsData,
     required this.currentRoomIndex,
     required this.currentRoomPositionindex,
@@ -56,8 +62,19 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
     vector64.Vector4 buttonCOffset = baseOffset + pointerOffset;
     pointerOffset.applyMatrix4(rotationMat);
     vector64.Vector4 buttonDOffset = baseOffset + pointerOffset;
-    
 
+
+    pointerOffset = vector64.Vector4(0,-height/2,0,0);
+    
+    vector64.Vector4 doorEOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 doorFOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 doorGOffset = baseOffset + pointerOffset;
+    pointerOffset.applyMatrix4(rotationMat);
+    vector64.Vector4 doorHOffset = baseOffset + pointerOffset;
+    
+    // red position buttons
     if (event.localPosition.distanceTo(Vector2(buttonAOffset.x, buttonAOffset.y)) < width/50) {
       print("CLICKED A");
       setCurrentRoomPositionindex(0);
@@ -78,6 +95,32 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       setCurrentRoomPositionindex(3);
       currentRoomPositionindex = 3;
     }
+
+    // door buttons
+    if (event.localPosition.distanceTo(Vector2(doorEOffset.x, doorEOffset.y)) < width/25) {
+      print("CLICKED E");
+      moveToRoomIndex(0);
+    }
+    if (event.localPosition.distanceTo(Vector2(doorFOffset.x, doorFOffset.y)) < width/25) {
+      print("CLICKED F");
+      moveToRoomIndex(1);
+    }
+    if (event.localPosition.distanceTo(Vector2(doorGOffset.x, doorGOffset.y)) < width/25) {
+      print("CLICKED G");
+      moveToRoomIndex(2);
+    }
+    if (event.localPosition.distanceTo(Vector2(doorHOffset.x, doorHOffset.y)) < width/25) {
+      print("CLICKED H");
+      moveToRoomIndex(3);
+    }
+  }
+
+  void _gameDataChanged(){
+    currentRoomIndex = gameData.currentRoomIndex?.value;
+    currentRoomPositionindex = gameData.currentRoomPositionindex?.value;
+
+    children.clear();
+    _addChildComponents();
   }
 
 
@@ -85,43 +128,43 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
   Future<void> onLoad() async {
     super.onLoad();
     anchor = Anchor.center;
+    gameData.addListener(_gameDataChanged);
+    _addChildComponents();
+  }
 
+  void _addChildComponents(){
     double squareSize = min(width,height); 
     final MyTableComponent tableA = MyTableComponent(
+      gameData: gameData,
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(-squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
-      rooms: roomsData,
-      roomIndex: 0,
       tableIndex: 0,
       relativeRotationIndex: 0,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
     final MyTableComponent tableB = MyTableComponent(
+      gameData: gameData,
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(squareSize /4, -squareSize /4) + Vector2(width/2,height/2),
-      rooms: roomsData,
-      roomIndex: 0,
       tableIndex: 1,
       relativeRotationIndex: 1,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
     final MyTableComponent tableC = MyTableComponent(
+      gameData: gameData,
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(squareSize /4, squareSize /4) + Vector2(width/2,height/2),
-      rooms: roomsData,
-      roomIndex: 0,
       tableIndex: 2,
       relativeRotationIndex: 2,
       showGridOverlay: showGridOverlay,
       debug: debug
     );
     final MyTableComponent tableD = MyTableComponent(
+      gameData: gameData,
       size: Vector2(scaleFactor * squareSize, scaleFactor * squareSize),
       position: Vector2(-squareSize /4, squareSize /4) + Vector2(width/2,height/2),
-      rooms: roomsData,
-      roomIndex: 0,
       tableIndex: 3,
       relativeRotationIndex: 3,
       showGridOverlay: showGridOverlay,
@@ -234,6 +277,39 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
     canvas.drawPath(doorBpath, doorPaint);
     canvas.drawPath(doorCpath, doorPaint);
     canvas.drawPath(doorDpath, doorPaint);
+
+
+    // if the doors lead to a room, draw an extra circle on them
+    Tuple2<int,int> getNewRoomPosition(Tuple2<int,int> currentRoomPos, int newIndex){
+      Tuple2<int,int> newRoomPosition = switch (newIndex) {
+        0 => Tuple2(currentRoomPos.item1+0, currentRoomPos.item2-1),
+        1 => Tuple2(currentRoomPos.item1+1, currentRoomPos.item2+0),
+        2 => Tuple2(currentRoomPos.item1+0, currentRoomPos.item2+1),
+        3 => Tuple2(currentRoomPos.item1-1, currentRoomPos.item2+0),
+        _ => Tuple2(0,0),
+      };
+      return newRoomPosition;
+    }
+    
+    for (int i = 0; i <= 3; i++){
+      Tuple2<int,int> newRoomPosition = getNewRoomPosition(roomsData[currentRoomIndex!].pos, i);
+      if ((roomsData.map((roomData)=>roomData.pos)).contains(newRoomPosition)){
+        Offset iconOffset = switch (i) {
+          0 => Offset(0, -height/2),
+          1 => Offset(width/2, 0),
+          2 => Offset(0, height/2),
+          3 => Offset(-width/2, 0),
+          _ => Offset(0,0),
+        };
+        canvas.drawCircle(
+          iconOffset, 
+          doorSize/2, 
+          doorPaint
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = width/100
+        );
+      }
+    }
   }
 
   void _showDebugInfo(Canvas canvas){

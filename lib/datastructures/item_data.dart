@@ -4,6 +4,61 @@ import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
+// ignore: camel_case_types
+enum ProcessingType {
+  NONE,
+  GROUND,
+  BOILED,
+  COOKED
+}
+
+extension ProcessingTypeExtension on ProcessingType {
+  String get name {
+    switch(this) {
+      case ProcessingType.NONE:
+        return "None";
+      case ProcessingType.GROUND:
+        return "Ground";
+      case ProcessingType.BOILED:
+        return "Boiled";
+      case ProcessingType.COOKED:
+        return "Cooked";
+      default:
+        return "None";
+    }
+  }
+
+  Color get color {
+    switch(this) {
+      case ProcessingType.NONE:
+        return Colors.grey;
+      case ProcessingType.GROUND:
+        return Colors.brown;
+      case ProcessingType.BOILED:
+        return Colors.lightBlueAccent;
+      case ProcessingType.COOKED:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  int get count {
+    switch(this) {
+      case ProcessingType.NONE:
+        return 0;
+      case ProcessingType.GROUND:
+        return 3;
+      case ProcessingType.BOILED:
+        return 1;
+      case ProcessingType.COOKED:
+        return 1;
+      default:
+        return 0;
+    }
+  }
+}
+
 class GameItem extends ChangeNotifier {
   late String id;
 
@@ -22,6 +77,11 @@ class GameItem extends ChangeNotifier {
   // rotation
   int relativeRotationIndex;
 
+  // processing done to this item
+  List<ProcessingType> processing;
+  ProcessingType processingKind;
+  bool processingReady = true;
+
   GameItem({
     required this.parentTable,
     this.name = "",
@@ -29,9 +89,15 @@ class GameItem extends ChangeNotifier {
     this.inputOffset = const Tuple2(-1,0),
     this.outputOffset = const Tuple2(1,0),
     this.relativeRotationIndex = 0,
+    this.processing = const [],
+    this.processingKind = ProcessingType.NONE,
   }){
     id = Uuid().v4();
-    name += id[0];
+  }
+
+  void addProcessing(ProcessingType process){
+    processing = [...processing, process];
+    notifyListeners();
   }
 
   void alignToGrid(){
@@ -73,8 +139,55 @@ class GameItem extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPos(Tuple2<int,int> newPos){
+    pos = newPos;
+    notifyListeners();
+  }
+
   updateOffset(Offset newOffset){
     posOffset = newOffset;
     notifyListeners();
+  }
+
+  bool processInputItems(){
+    bool shouldBeRecursive = false;
+    if (!isMachine) return false;
+    if (!processingReady) return false;
+    List<GameItem> tempCopyList = [...parentTable!.childItems];
+
+    Tuple2<int,int> relativeInputOffset = relativeRotationTuple(inputOffset, relativeRotationIndex);
+    Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
+
+    for (GameItem item in tempCopyList){
+      if (
+        item.pos.item1 == pos.item1+relativeInputOffset.item1 && 
+        item.pos.item2 == pos.item2+relativeInputOffset.item2 && 
+        !item.isMachine
+      ){
+        parentTable!.childItems.remove(item);
+
+        item.addProcessing(processingKind);
+        item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
+
+        for (int i = 0; i < processingKind.count; i++){
+          GameItem newItem = GameItem(
+            parentTable: item.parentTable,
+            name: item.name,
+            isMachine: item.isMachine,
+            inputOffset: item.inputOffset,
+            outputOffset: item.outputOffset,
+            relativeRotationIndex: item.relativeRotationIndex,
+            processing: item.processing,
+            processingKind: item.processingKind,
+          );
+          newItem.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
+          parentTable!.addItem(newItem);
+        }
+        shouldBeRecursive = true;
+        processingReady = false;
+        notifyListeners();
+      }
+    }
+    return shouldBeRecursive;
   }
 }

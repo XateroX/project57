@@ -38,6 +38,8 @@ class MyFlameGame extends FlameGame with HasKeyboardHandlerComponents, TapCallba
     gameData.addInitialroom();
 
     final MyMinimapComponent minimap = MyMinimapComponent(
+      gameData: gameData,
+      moveToRoomIndex: gameData.moveCurrentRoomIndex,
       setCurrentRoomPositionindex: gameData.setCurrentRoomPositionindex,
       roomsData: gameData.rooms,
       currentRoomIndex: gameData.currentRoomIndex?.value,
@@ -48,20 +50,18 @@ class MyFlameGame extends FlameGame with HasKeyboardHandlerComponents, TapCallba
     );
 
     final MyTableComponent table1 = MyTableComponent(
+      gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
-      rooms: gameData.rooms,
-      roomIndex: 0,
       tableIndex: gameData.currentRoomPositionindex!.value,
       relativeRotationIndex: 0,
       showGridOverlay: true
     );
 
     final MyTableComponent table2 = MyTableComponent(
+      gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
-      rooms: gameData.rooms,
-      roomIndex: 0,
       tableIndex: (gameData.currentRoomPositionindex!.value+1)%4,
       relativeRotationIndex: 1,
       showGridOverlay: true

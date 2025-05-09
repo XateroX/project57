@@ -175,3 +175,15 @@ Offset relativeRotationOffset(Offset offset, int relativeRotationIndex){
   };
   return offset;
 }
+
+Tuple2<int,int> relativeRotationTuple(Tuple2<int,int> tuple, int relativeRotationIndex){
+  // rotate the calculated coords to match the rotation
+  tuple = switch (relativeRotationIndex) {
+    0 => Tuple2<int,int>(tuple.item1, tuple.item2),
+    1 => Tuple2<int,int>(tuple.item2, tuple.item1),
+    2 => Tuple2<int,int>(-tuple.item1, -tuple.item2),
+    3 => Tuple2<int,int>(-tuple.item2, -tuple.item1),
+    _ => Tuple2<int,int>(tuple.item1, tuple.item2),
+  };
+  return tuple;
+}

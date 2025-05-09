@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
@@ -12,8 +13,7 @@ import 'package:tuple/tuple.dart';
 
 class MyTableComponent extends PositionComponent {
   late GameTable table;
-  List<GameRoomData> rooms;
-  int roomIndex;
+  GameOverallData gameData;
   int tableIndex;
   int relativeRotationIndex;
   bool debug;
@@ -26,14 +26,13 @@ class MyTableComponent extends PositionComponent {
   MyTableComponent({
     required super.size,
     required super.position,
-    required this.rooms,
-    required this.roomIndex,
+    required this.gameData,
     required this.tableIndex,
     required this.relativeRotationIndex,
     this.debug = false,
     this.showGridOverlay = false
   }){
-    table = rooms[roomIndex].tables[tableIndex];
+    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
 
     path = getLShapedPath(
       width, 
@@ -53,12 +52,18 @@ class MyTableComponent extends PositionComponent {
     );
   }
 
-  @override
-  FutureOr<void> onLoad() {
-    super.onLoad();
+  void _onTableValuesChanged(){
+    children.clear();
+    addChildrenItemComponents();
+  }
 
-    anchor = Anchor.center;
+  void _onGameDataChanged(){
+    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
+    children.clear();
+    addChildrenItemComponents();
+  }
 
+  void addChildrenItemComponents(){
     for (GameItem item in table.childItems){
       Offset positionOffset = 
         item.posOffset 
@@ -76,9 +81,18 @@ class MyTableComponent extends PositionComponent {
     }
   }
 
+  @override
+  FutureOr<void> onLoad() {
+    super.onLoad();
+    anchor = Anchor.center;
+    addChildrenItemComponents();
+    table.addListener(_onTableValuesChanged);
+    gameData.addListener(_onGameDataChanged);
+  }
+
   void updateTableIndex(int newIndex){
     tableIndex = newIndex;
-    table = rooms[roomIndex].tables[tableIndex];
+    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
 
     children.clear();
     onLoad();

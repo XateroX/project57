@@ -8,7 +8,7 @@ import 'package:tuple/tuple.dart';
 class GameRoomData extends ChangeNotifier {
   // locality and identity
   final String id = Uuid().v1();
-  late Tuple2 pos;
+  late Tuple2<int,int> pos;
 
   // game state
   late List<GameTable> tables;

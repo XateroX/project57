@@ -41,6 +41,9 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     // draw the basic shape and name 
     _drawBasicShapeAndName(canvas);
+
+    // draw anything indicating what processing has been done
+    _drawProcessedEffects(canvas);
   }
 
   void _drawBasicShapeAndName(Canvas canvas){
@@ -134,14 +137,48 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         outAreaPaint
       );
 
-      canvas.drawCircle(inputOffset, width/10, paint);
-      canvas.drawCircle(outputOffset, width/10, paint);
+      canvas.drawCircle(inputOffset.scale(0.7, 0.7), width/15, paint);
+      canvas.drawCircle(outputOffset.scale(0.7, 0.7), width/15, paint);
       canvas.drawLine(
-        inputOffset,
-        outputOffset,
+        inputOffset.scale(0.7, 0.7),
+        outputOffset.scale(0.7, 0.7),
         paint
       );
     }
+  }
+
+  void _drawProcessedEffects(Canvas canvas){
+    canvas.translate(-width/2, -height/3);
+    if (item.processing.isNotEmpty){
+      int n = 1;
+      for (ProcessingType process in item.processing){
+        Paint paint = Paint()
+          ..color=process.color
+          ..style=PaintingStyle.fill;
+        Paint outline = Paint()
+          ..color=Colors.black//process.color
+          ..style=PaintingStyle.stroke
+          ..strokeWidth=width/50;
+        canvas.drawCircle(
+          Offset(
+            width*(n/(1+item.processing.length)), 
+            0
+          ),
+          width/(10+ item.processing.length),
+          paint
+        );
+        canvas.drawCircle(
+          Offset(
+            width*(n/(1+item.processing.length)), 
+            0
+          ),
+          width/(10+ item.processing.length),
+          outline
+        );
+        n++;
+      }
+    }
+    canvas.translate(width/2, height/2);
   }
 
   void _onItemDataChanged(){
@@ -186,7 +223,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void onDragEnd(DragEndEvent event) {
     _dragging = false;
     if (item.parentTable != null){
-      item.parentTable!.alignItemsToGrid([item]);
+      item.parentTable!.handleItemsPlaced([item]);
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
   }
