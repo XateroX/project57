@@ -19,7 +19,6 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
   int relativeRotationIndex;
   bool debug;
   bool showGridOverlay;
-  bool debugMode=true;
   bool isBeingHovered=false;
 
   // basic drawing info
@@ -95,6 +94,10 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
     removeAll(children);
     addChildrenItemComponents();
+    add(RectangleHitbox(
+      size: Vector2(width, height),
+      isSolid: true
+    )..collisionType);
   }
 
   void addChildrenItemComponents(){
@@ -109,10 +112,15 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
         size: Vector2(width/GameTable.cellCount, width/GameTable.cellCount),
         relativeRotationIndex: relativeRotationIndex,
         position: Vector2(positionOffset.dx,positionOffset.dy),
-        baseOffset: Offset(width/2,height/2)
+        baseOffset: Offset(width/2,height/2),
       );
       add(itemComponent);
     }
+  }
+
+  void refreshItemChildren(){
+    removeAll(children);
+    addChildrenItemComponents();
   }
 
   @override
@@ -174,7 +182,7 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
       path, Paint()
         ..color = isBeingHovered ? Colors.green : Colors.grey
         ..style = PaintingStyle.stroke
-        ..strokeWidth = width/10
+        ..strokeWidth = width/50
     );
 
     canvas.translate(-width/2, -height/2);

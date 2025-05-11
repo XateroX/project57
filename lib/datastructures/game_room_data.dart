@@ -22,12 +22,12 @@ class GameRoomData extends ChangeNotifier {
     } else {
       this.tables = [
         GameTable.blank(0),
-        // GameTable.blank(1),
-        // GameTable.blank(2),
-        // GameTable.blank(3),
-        GameTable(relativeRotationIndex: 1),
-        GameTable(relativeRotationIndex: 2),
-        GameTable(relativeRotationIndex: 3),
+        GameTable.blank(1),
+        GameTable.blank(2),
+        GameTable.blank(3),
+        // GameTable(relativeRotationIndex: 1),
+        // GameTable(relativeRotationIndex: 2),
+        // GameTable(relativeRotationIndex: 3),
       ];
 
       for (GameTable table in this.tables){

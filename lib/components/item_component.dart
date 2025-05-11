@@ -25,7 +25,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     required this.baseOffset,
     required this.relativeRotationIndex,
     super.size,
-    super.position 
+    super.position,
   }){
     _basePosition = position;
   }
@@ -59,32 +59,6 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
   int itemPointsIndex(){
     return item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1;
-  }
-
-  @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
-    if (
-      game.currentlyDraggedComponent==null || 
-      (
-        game.currentlyDraggedComponent!=null && 
-        game.currentlyDraggedComponent!.item.id != item.id
-      )
-    ) {
-      return;
-    }
-    if (other is MyTableComponent) {
-      // print("Its working, it's working!!");
-      other.setIsBeingHovered(!other.isBeingHovered);
-    } else {
-    }
-  }
-
-  @override
-  void onCollisionEnd(PositionComponent other) {
-    if (other is MyTableComponent) {
-      other.setIsBeingHovered(false);
-    } else {
-    }
   }
 
 
@@ -243,10 +217,14 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     super.onDragStart(event);
     _dragging = true;
     if (parent is MyTableComponent){
+      (findGame() as MyFlameGame).currentlyDraggedComponent = this;
+      (findGame() as MyFlameGame).currentlyTargetedTableComponent = parent as MyTableComponent;
+      //  print("${(parent as MyTableComponent).table.id}  ${relativeRotationIndex}");
       (parent as MyTableComponent).setIsBeingHovered(true);
+      print("\n ${(findGame() as MyFlameGame).currentlyDraggedComponent==null} \n ${(findGame() as MyFlameGame).currentlyTargetedTableComponent==null} \n ${(findGame() as MyFlameGame).currentlyDraggedComponent==null}");
     }
     // Notify game this is the active one
-    (findGame() as MyFlameGame).currentlyDraggedComponent = this;
+    
     return true; // returning true means we "claim" the drag
   }
 
@@ -264,19 +242,81 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   @override
   void onDragEnd(DragEndEvent event) {
     _dragging = false;
+    if (
+      (findGame() as MyFlameGame).currentlyTargetedTableComponent != null &&
+      item.parentTable != (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table
+    ){
+      (parent as MyTableComponent).setIsBeingHovered(false);
+      item.parentTable!.removeItem(item);
+      item.parentTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table;
+      item.parentTable!.addItem(item);
+      parent!.children.remove(this);
+      item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
+      (findGame() as MyFlameGame).currentlyTargetedTableComponent!.setIsBeingHovered(false);
+    }
     if (item.parentTable != null){
       item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
       if (parent is MyTableComponent){
         (parent as MyTableComponent).setIsBeingHovered(false);
+        (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
       }
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
+    (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
   }
 
   @override
   void onDragCancel(DragCancelEvent event) {
     _dragging = false;
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
+    (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
+  }
+  // //
+
+
+  // COLLISION //
+  @override
+  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+    print("COLLISION START");
+    if (
+      game.currentlyDraggedComponent==null || 
+      (
+        game.currentlyDraggedComponent!=null && 
+        game.currentlyDraggedComponent! != this
+      )
+    ) {
+      return;
+    }
+    if (other is MyTableComponent) {
+      // print("Its working, it's working!!");
+      if (!other.isBeingHovered){
+        (findGame() as MyFlameGame).currentlyTargetedTableComponent = other;
+        other.setIsBeingHovered(true);
+      }
+      other.setIsBeingHovered(true);
+    } else {
+    }
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    print("COLLISION END");
+    if (
+      game.currentlyDraggedComponent==null || 
+      (
+        game.currentlyDraggedComponent!=null && 
+        game.currentlyDraggedComponent! != this
+      )
+    ) {
+      return;
+    }
+    if (other is MyTableComponent) {
+      other.setIsBeingHovered(false);
+      if ((findGame() as MyFlameGame).currentlyTargetedTableComponent == other){
+        (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
+      }
+    } else {
+    }
   }
   // //
 

@@ -14,6 +14,7 @@ import 'package:project57/datastructures/item_data.dart';
 class MyFlameGame extends FlameGame 
   with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection  {
   MyItemComponent? currentlyDraggedComponent;
+  MyTableComponent? currentlyTargetedTableComponent;
 
   double get width => size.x;
   double get height => size.y;
@@ -73,7 +74,7 @@ class MyFlameGame extends FlameGame
     world.add(table1);
     world.add(table2);
 
-    // 🔁 Listen to changes and update table indices
+    // Listen to changes and update table indices
     gameData.currentRoomPositionindex!.addListener(() {
       table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
       table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
