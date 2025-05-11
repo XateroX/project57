@@ -25,8 +25,8 @@ class GameTable extends ChangeNotifier{
     notifyListeners();
   }
 
-  void handleItemsPlaced(List<GameItem> items){
-    alignItemsToGrid(items);
+  void handleItemsPlaced(List<GameItem> items, int visualParentRelativeIndex){
+    alignItemsToGrid(items, visualParentRelativeIndex);
     handleMachineInteractions(items);
     spaceOutAllItems();
   }
@@ -46,9 +46,9 @@ class GameTable extends ChangeNotifier{
     notifyListeners();
   }
 
-  void alignItemsToGrid(List<GameItem> itemsToAlign){
+  void alignItemsToGrid(List<GameItem> itemsToAlign, int visualParentRelativeIndex){
     for (GameItem item in itemsToAlign){
-      item.alignToGrid();
+      item.alignToGrid(visualParentRelativeIndex);
     }
   }
 

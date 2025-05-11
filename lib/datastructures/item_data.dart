@@ -100,15 +100,15 @@ class GameItem extends ChangeNotifier {
     notifyListeners();
   }
 
-  void alignToGrid(){
+  void alignToGrid(int visualParentRelativeIndex){
     pos = Tuple2(
       (posOffset.dx-1).round().clamp(0, 8),
       (posOffset.dy-1).round().clamp(0, 8),
     );
 
     if (parentTable != null){
-      Tuple2<int,int> badsector = getBadSector(parentTable!.relativeRotationIndex);
-      Tuple2<int,int> badness = getBadness(parentTable!.relativeRotationIndex, pos);
+      Tuple2<int,int> badsector = getBadSector(visualParentRelativeIndex);
+      Tuple2<int,int> badness = getBadness(visualParentRelativeIndex, pos);
 
       if (badness.item1 >= 0 && badness.item2 >= 0) {
         if (badness.item1 < badness.item2) {
@@ -127,7 +127,7 @@ class GameItem extends ChangeNotifier {
       }
     }
     // rotate the calculated coords to match the rotation of the table
-    pos = switch (parentTable!.relativeRotationIndex) {
+    pos = switch (visualParentRelativeIndex) {
       0 => Tuple2(pos.item1, pos.item2),
       1 => Tuple2(pos.item2, 8-pos.item1),
       2 => Tuple2(8-pos.item1, 8-pos.item2),

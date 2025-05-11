@@ -223,7 +223,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void onDragEnd(DragEndEvent event) {
     _dragging = false;
     if (item.parentTable != null){
-      item.parentTable!.handleItemsPlaced([item]);
+      item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
   }
