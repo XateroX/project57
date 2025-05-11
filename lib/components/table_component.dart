@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/game_overall_data.dart';
@@ -11,13 +12,15 @@ import 'package:project57/utils/geometry.dart';
 import 'package:project57/components/item_component.dart';
 import 'package:tuple/tuple.dart';
 
-class MyTableComponent extends PositionComponent {
+class MyTableComponent extends PositionComponent with CollisionCallbacks {
   late GameTable table;
   GameOverallData gameData;
   int tableIndex;
   int relativeRotationIndex;
   bool debug;
   bool showGridOverlay;
+  bool debugMode=true;
+  bool isBeingHovered=false;
 
   // basic drawing info
   late Path path;
@@ -52,6 +55,31 @@ class MyTableComponent extends PositionComponent {
     );
   }
 
+  @override
+  FutureOr<void> onLoad() {
+    super.onLoad();
+    anchor = Anchor.center;
+    addChildrenItemComponents();
+    add(RectangleHitbox(
+      size: Vector2(width, height),
+      isSolid: true
+      )..collisionType);
+    table.addListener(_onTableValuesChanged);
+    gameData.addListener(_onGameDataChanged);
+  }
+
+  void setIsBeingHovered(bool hovering){
+    isBeingHovered = hovering;
+  }
+
+  void updateTableIndex(int newIndex){
+    tableIndex = newIndex;
+    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
+
+    children.clear();
+    onLoad();
+  }
+
   void _onTableValuesChanged(){
     children.clear();
     addChildrenItemComponents();
@@ -79,23 +107,6 @@ class MyTableComponent extends PositionComponent {
       );
       add(itemComponent);
     }
-  }
-
-  @override
-  FutureOr<void> onLoad() {
-    super.onLoad();
-    anchor = Anchor.center;
-    addChildrenItemComponents();
-    table.addListener(_onTableValuesChanged);
-    gameData.addListener(_onGameDataChanged);
-  }
-
-  void updateTableIndex(int newIndex){
-    tableIndex = newIndex;
-    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
-
-    children.clear();
-    onLoad();
   }
 
   @override
@@ -155,9 +166,9 @@ class MyTableComponent extends PositionComponent {
 
     canvas.drawPath(
       path, Paint()
-        ..color = Colors.grey
+        ..color = isBeingHovered ? Colors.green : Colors.grey
         ..style = PaintingStyle.stroke
-        ..strokeWidth = width/100
+        ..strokeWidth = width/10
     );
 
     canvas.translate(-width/2, -height/2);

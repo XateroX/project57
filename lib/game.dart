@@ -11,7 +11,8 @@ import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/components/item_component.dart';
 import 'package:project57/datastructures/item_data.dart';
 
-class MyFlameGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks  {
+class MyFlameGame extends FlameGame 
+  with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection  {
   MyItemComponent? currentlyDraggedComponent;
 
   double get width => size.x;

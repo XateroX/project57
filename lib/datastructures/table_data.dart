@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/item_data.dart';
 import 'package:tuple/tuple.dart';
+import 'package:uuid/uuid.dart';
 
 class GameTable extends ChangeNotifier{
+  late String id;
+
   late List<GameItem> childItems;
   static int cellCount = 10;
   int relativeRotationIndex;
@@ -14,6 +17,7 @@ class GameTable extends ChangeNotifier{
       this.childItems = const [],
     }
   ){
+    id = Uuid().v4();
     for (GameItem item in childItems){
       item.addListener(notifyListeners);
     }
@@ -30,7 +34,6 @@ class GameTable extends ChangeNotifier{
     handleMachineInteractions(items);
     spaceOutAllItems();
   }
-
 
   void handleMachineInteractions(List<GameItem> items){
     while(recursiveMachineInteractions){
@@ -95,72 +98,72 @@ class GameTable extends ChangeNotifier{
       childItems: []
     );
 
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Sword",
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,0);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Herbs"
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,1);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Iron Pot",
-        isMachine: true,
-        processingKind: ProcessingType.BOILED
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,2);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Iron Pot",
-        isMachine: true,
-        processingKind: ProcessingType.BOILED
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,3);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Iron Pot",
-        isMachine: true,
-        processingKind: ProcessingType.BOILED
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,4);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Iron Pot",
-        isMachine: true,
-        processingKind: ProcessingType.BOILED
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,5);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "P&M",
-        isMachine: true,
-        processingKind: ProcessingType.GROUND
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,6);
-    blankTable.addItem(
-      GameItem(
-        parentTable: blankTable,
-        name: "Gillyweed"
-      )
-    );
-    blankTable.childItems.last.pos = Tuple2(0,7);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Sword",
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,0);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Herbs"
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,1);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Iron Pot",
+    //     isMachine: true,
+    //     processingKind: ProcessingType.BOILED
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,2);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Iron Pot",
+    //     isMachine: true,
+    //     processingKind: ProcessingType.BOILED
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,3);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Iron Pot",
+    //     isMachine: true,
+    //     processingKind: ProcessingType.BOILED
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,4);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Iron Pot",
+    //     isMachine: true,
+    //     processingKind: ProcessingType.BOILED
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,5);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "P&M",
+    //     isMachine: true,
+    //     processingKind: ProcessingType.GROUND
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,6);
+    // blankTable.addItem(
+    //   GameItem(
+    //     parentTable: blankTable,
+    //     name: "Gillyweed"
+    //   )
+    // );
+    // blankTable.childItems.last.pos = Tuple2(0,7);
     blankTable.addItem(
       GameItem(
         parentTable: blankTable,

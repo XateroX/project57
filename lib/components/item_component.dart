@@ -1,15 +1,17 @@
 import 'dart:async';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/game.dart';
 import 'package:project57/utils/geometry.dart';
 
-class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler {
+class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks {
   bool _dragging = false;
   late Vector2 _basePosition;
   GameItem item;
@@ -28,9 +30,57 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     _basePosition = position;
   }
 
+  @override
+  FutureOr<void> onLoad() {
+    super.onLoad();
+    anchor = Anchor.center;
+
+    add(RectangleHitbox());
+
+    // Listen to changes in table data
+    item.addListener(_onItemDataChanged);
+  }
+
+  void _onItemDataChanged(){
+    Offset positionOffset = Offset(0, 0);
+    if (item.posOffset != Offset(0,0)){
+      positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
+    } else {
+      positionOffset = baseOffset + Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points[itemPointsIndex()];
+    }
+    position = Vector2(positionOffset.dx,positionOffset.dy);
+  }
+
   int itemPointsIndex(){
     return item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1;
   }
+
+  @override
+  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+    if (
+      game.currentlyDraggedComponent==null || 
+      (
+        game.currentlyDraggedComponent!=null && 
+        game.currentlyDraggedComponent!.item.id != item.id
+      )
+    ) {
+      return;
+    }
+    if (other is MyTableComponent) {
+      // print("Its working, it's working!!");
+      other.setIsBeingHovered(!other.isBeingHovered);
+    } else {
+    }
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    if (other is MyTableComponent) {
+      other.setIsBeingHovered(false);
+    } else {
+    }
+  }
+
 
   @override
   void render(Canvas canvas){
@@ -181,41 +231,27 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     canvas.translate(width/2, height/2);
   }
 
-  void _onItemDataChanged(){
-    Offset positionOffset = Offset(0, 0);
-    if (item.posOffset != Offset(0,0)){
-      positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
-    } else {
-      positionOffset = baseOffset + Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points[itemPointsIndex()];
-    }
-    position = Vector2(positionOffset.dx,positionOffset.dy);
-  }
-
-  @override
-  FutureOr<void> onLoad() {
-    super.onLoad();
-    anchor = Anchor.center;
-
-    // Listen to changes in table data
-    item.addListener(_onItemDataChanged);
-  }
-
   // DRAGGING //
   @override
   bool onDragStart(DragStartEvent event) {
+    super.onDragStart(event);
     _dragging = true;
+    if (parent is MyTableComponent){
+      (parent as MyTableComponent).setIsBeingHovered(true);
+    }
     // Notify game this is the active one
-    // (findGame() as MyFlameGame).currentlyDraggedComponent = this;
+    (findGame() as MyFlameGame).currentlyDraggedComponent = this;
     return true; // returning true means we "claim" the drag
   }
 
   @override
+
   void onDragUpdate(DragUpdateEvent event) {
     if (_dragging) {
       // Follow the mouse by updating position relative to drag start
       position = position + event.canvasDelta;
       item.updateOffset(Offset(position.x/size.x, position.y/size.y));
-      (findGame() as MyFlameGame).currentlyDraggedComponent = this;
+      // (findGame() as MyFlameGame).currentlyDraggedComponent = this;
     }
   }
 
@@ -224,6 +260,9 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     _dragging = false;
     if (item.parentTable != null){
       item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
+      if (parent is MyTableComponent){
+        (parent as MyTableComponent).setIsBeingHovered(false);
+      }
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
   }
