@@ -68,6 +68,13 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     gameData.addListener(_onGameDataChanged);
   }
 
+  @override
+  void onRemove() {
+    table.removeListener(_onTableValuesChanged);
+    gameData.removeListener(_onGameDataChanged);
+    super.onRemove();
+  }
+
   void setIsBeingHovered(bool hovering){
     isBeingHovered = hovering;
   }
@@ -75,19 +82,18 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
   void updateTableIndex(int newIndex){
     tableIndex = newIndex;
     table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
-
-    children.clear();
-    onLoad();
+    removeAll(children);
+    addChildrenItemComponents();
   }
 
   void _onTableValuesChanged(){
-    children.clear();
+    removeAll(children);
     addChildrenItemComponents();
   }
 
   void _onGameDataChanged(){
     table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
-    children.clear();
+    removeAll(children);
     addChildrenItemComponents();
   }
 

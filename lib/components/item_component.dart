@@ -41,6 +41,12 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     item.addListener(_onItemDataChanged);
   }
 
+  @override
+  void onRemove() {
+    item.removeListener(_onItemDataChanged);
+    super.onRemove();
+  }
+
   void _onItemDataChanged(){
     Offset positionOffset = Offset(0, 0);
     if (item.posOffset != Offset(0,0)){
