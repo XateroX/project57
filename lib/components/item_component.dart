@@ -288,6 +288,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
   @override
   void onDragEnd(DragEndEvent event) {
+    centerCameraAfterMove();
     if (_dragging){
       if (
         (findGame() as MyFlameGame).currentlyTargetedTableComponent != null &&
@@ -323,11 +324,13 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         parent!.children.remove(this);
         item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
         newTable.setIsBeingHovered(false);
+        relaxCamera();
       }
       else if (
         (findGame() as MyFlameGame).carryTray.isBeingHovered &&
         (findGame() as MyFlameGame).carryTray.tray.items.length < 9
       ){
+        relaxCamera();
         (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
         item.parentTable!.removeItem(item);
         item.parentTable = null;
@@ -481,5 +484,20 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     // } else {
     //   return false;
     // }
+  }
+
+  void relaxCamera(){
+    (findGame() as MyFlameGame).targetPosition = null;
+    (findGame() as MyFlameGame).targetZoom = null;
+  }
+
+  void centerCameraAfterMove(){
+    if (parentTableComp != null){
+      (findGame() as MyFlameGame).targetPosition = parentTableComp!.absoluteCenter;
+      (findGame() as MyFlameGame).targetZoom = 1.2;
+    } else {
+      (findGame() as MyFlameGame).targetPosition = parentTray!.absoluteCenter;
+      (findGame() as MyFlameGame).targetZoom = 1.5;
+    }
   }
 }

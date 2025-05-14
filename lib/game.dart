@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flame/post_process.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -13,6 +14,7 @@ import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/components/item_component.dart';
 import 'package:project57/datastructures/item_data.dart';
+import 'package:project57/shaders/shadow_and_candle.dart';
 
 class MyFlameGame extends FlameGame 
   with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection  {
@@ -97,9 +99,39 @@ class MyFlameGame extends FlameGame
       table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
     });
 
-    // make the camera follow something
-    // camera.follow();
+    camera.postProcess = PostProcessGroup(
+      postProcesses: [
+        PostProcessSequentialGroup(
+          postProcesses: [
+            ShadowAndCandlePostProcess(),
+          ],
+        ),
+      ],
+    );
+  }
 
-    // debugMode = true;
+  Vector2? targetPosition;
+  double? targetZoom;
+  double zoomLerpSpeed = 4.0;
+  double lerpSpeed = 4.0;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    if (targetPosition != null) {
+      camera.viewfinder.position = Vector2(
+        camera.viewfinder.position.x + (targetPosition!.x - camera.viewfinder.position.x) * lerpSpeed * dt,
+        camera.viewfinder.position.y + (targetPosition!.y - camera.viewfinder.position.y) * lerpSpeed * dt,
+      );
+    } else {
+      targetPosition = Vector2(0,height/15);
+    }
+
+    if (targetZoom != null) {
+      camera.viewfinder.zoom = camera.viewfinder.zoom + (targetZoom! - camera.viewfinder.zoom) * zoomLerpSpeed * dt;
+    } else {
+      targetZoom = 1.0;
+    }
   }
 }
