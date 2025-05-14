@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:project57/components/carry_tray_component.dart';
 import 'package:project57/components/minimap_component.dart';
 import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_overall_data.dart';
@@ -16,15 +17,25 @@ class MyFlameGame extends FlameGame
   with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection  {
   MyItemComponent? currentlyDraggedComponent;
   MyTableComponent? currentlyTargetedTableComponent;
+  late CarryTrayComponent carryTray;
 
   double get width => size.x;
   double get height => size.y;
+  late double squareSize;
   GameOverallData gameData = GameOverallData();
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    double squareSize = min(width,height);
+
+    debugMode = true;
+
+    squareSize = min(width,height);
+    carryTray = CarryTrayComponent(
+      tray: gameData.carryTray,
+      position: Vector2(0, 0.5* (-3*squareSize/8) - 10),
+      size: Vector2(squareSize/4,3*squareSize/8),
+    );
 
     camera.viewfinder.anchor = Anchor.center;
     // shift the camera to the center of the screen
@@ -73,6 +84,7 @@ class MyFlameGame extends FlameGame
 
     // world.add(background);
     world.add(minimap);
+    world.add(carryTray);
     world.add(table1);
     world.add(table2);
 

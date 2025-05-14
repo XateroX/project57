@@ -62,6 +62,34 @@ extension ProcessingTypeExtension on ProcessingType {
 class GameItem extends ChangeNotifier {
   // ignore: non_constant_identifier_names
   static int MAX_PROCESSING = 4;
+  static List<GameItem> NORMAL_ITEMS = [
+    GameItem(
+      parentTable: null,
+      name: "Gillyweed"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Herbs"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Water"
+    )
+  ];
+  static List<GameItem> MACHINE_ITEMS = [
+    GameItem(
+      parentTable: null,
+      name: "Iron Pot",
+      isMachine: true,
+      processingKind: ProcessingType.BOILED
+    ),
+    GameItem(
+        parentTable: null,
+        name: "P&M",
+        isMachine: true,
+        processingKind: ProcessingType.GROUND
+      )
+  ];
 
   late String id;
 
@@ -145,6 +173,11 @@ class GameItem extends ChangeNotifier {
 
   void setPos(Tuple2<int,int> newPos){
     pos = newPos;
+    notifyListeners();
+  }
+
+  void setPosOffset(Offset newPosOffset){
+    posOffset = newPosOffset;
     notifyListeners();
   }
 

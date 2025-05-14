@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:project57/components/carry_tray_component.dart';
 import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
@@ -15,17 +16,19 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   bool _dragging = false;
   late Vector2 _basePosition;
   GameItem item;
-  List<Offset> points = [];
+  List<Offset>? points = [];
   Offset baseOffset;
   int relativeRotationIndex;
-  MyTableComponent parentTableComp;
+  MyTableComponent? parentTableComp;
+  CarryTrayComponent? parentTray;
 
   MyItemComponent({
     required this.item,
-    required this.points,
+    this.points,
     required this.baseOffset,
     required this.relativeRotationIndex,
-    required this.parentTableComp,
+    this.parentTableComp,
+    this.parentTray,
     super.size,
     super.position,
   }){
@@ -37,7 +40,10 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     super.onLoad();
     anchor = Anchor.center;
 
-    add(RectangleHitbox());
+    add(RectangleHitbox(
+      size: Vector2(width, height),
+      isSolid: true,
+    ));
 
     // Listen to changes in table data
     item.addListener(_onItemDataChanged);
@@ -51,11 +57,25 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
   void _onItemDataChanged(){
     Offset positionOffset = Offset(0, 0);
-    if (item.posOffset != Offset(0,0)){
-      positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
-    } else {
-      positionOffset = baseOffset + Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points[itemPointsIndex()];
+
+    if (parentTableComp != null){
+      if (item.posOffset != Offset(0,0)){
+        positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
+      } else {
+        positionOffset = baseOffset + Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y) + points![itemPointsIndex()];
+      }
+    } else if (parentTray != null){
+      if (item.posOffset != Offset(0,0)){
+        positionOffset = Offset(item.posOffset.dx*size.x, item.posOffset.dy*size.y);
+      } else {
+        int index = parentTray!.tray.items.indexOf(item);
+        int row = index ~/ 3;
+        int totalItems = parentTray!.tray.items.length;
+        Vector2 pos = CarryTrayComponent.itemPositionByIndex(index, row, totalItems);
+        positionOffset = Offset(pos.x*parentTray!.width, pos.y*parentTray!.height);
+      }
     }
+
     position = Vector2(positionOffset.dx,positionOffset.dy);
   }
 
@@ -141,12 +161,18 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     int inputOffsetIndex = item.inputOffset.item2 * (GameTable.cellCount-1) + item.inputOffset.item1;
     int outputOffsetIndex = item.outputOffset.item2 * (GameTable.cellCount-1) + item.outputOffset.item1;
 
-    if (!(
-      itemPointsIndex()+inputOffsetIndex >= 0 && 
-      itemPointsIndex()+inputOffsetIndex < points.length && 
-      itemPointsIndex()+outputOffsetIndex >= 0 && 
-      itemPointsIndex()+outputOffsetIndex < points.length
-    )) return;
+    if (
+      !(
+        itemPointsIndex()+inputOffsetIndex >= 0 && 
+        itemPointsIndex()+inputOffsetIndex < GameTable.cellCount*GameTable.cellCount && 
+        itemPointsIndex()+outputOffsetIndex >= 0 && 
+        itemPointsIndex()+outputOffsetIndex < GameTable.cellCount*GameTable.cellCount
+      )
+      || 
+      (
+        parentTray != null
+      )
+    ) return;
 
     Offset inputOffset = Offset(width*item.inputOffset.item1,height*item.inputOffset.item2);
     Offset outputOffset = Offset(width*item.outputOffset.item1,height*item.outputOffset.item2);
@@ -235,8 +261,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   bool onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     _dragging = true;
+    (findGame() as MyFlameGame).currentlyDraggedComponent = this;
     if (parent is MyTableComponent){
-      (findGame() as MyFlameGame).currentlyDraggedComponent = this;
       (findGame() as MyFlameGame).currentlyTargetedTableComponent = parent as MyTableComponent;
       //  print("${(parent as MyTableComponent).table.id}  ${relativeRotationIndex}");
       (parent as MyTableComponent).setIsBeingHovered(true);
@@ -267,18 +293,43 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     ){
       MyTableComponent newTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!;
 
-      Vector2 newTableBaseOffset = newTable.position - parentTableComp.position;
+      Vector2 oldPosition = parentTableComp != null 
+        ? parentTableComp!.position 
+        : parentTray != null 
+          ? parentTray!.position + Vector2(parentTray!.width/2, parentTray!.height/2)
+          : Vector2(0,0);
+
+      Vector2 newTableBaseOffset = newTable.position - oldPosition;
 
       // set the posOffset to be relative to the new table origin
-      item.updateOffset(Offset((position.x-newTableBaseOffset.x)/size.x, (position.y-newTableBaseOffset.y)/size.y));
+      item.updateOffset(
+        Offset(
+          (position.x-newTableBaseOffset.x)/size.x, 
+          (position.y-newTableBaseOffset.y)/size.y
+        )
+      );
 
-      (parent as MyTableComponent).setIsBeingHovered(false);
-      item.parentTable!.removeItem(item);
+      if (parent is MyTableComponent){
+        (parent as MyTableComponent).setIsBeingHovered(false);
+        item.parentTable!.removeItem(item);
+      } else if (parent is CarryTrayComponent){
+        (parent as CarryTrayComponent).setIsBeingHovered(false);
+        parentTray!.tray.removeItem(item);
+      }
       item.parentTable = newTable.table;
       item.parentTable!.addItem(item);
       parent!.children.remove(this);
       item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
       newTable.setIsBeingHovered(false);
+    }
+    else if (
+      (findGame() as MyFlameGame).carryTray.isBeingHovered
+    ){
+      (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
+      item.parentTable!.removeItem(item);
+      item.parentTable = null;
+      parent!.children.remove(this);
+      (findGame() as MyFlameGame).carryTray.tray.addItem(item);
     }
     else if (item.parentTable != null){
       item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
@@ -286,6 +337,9 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         (parent as MyTableComponent).setIsBeingHovered(false);
         (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
       }
+      (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
+    } else if (parentTray != null){
+      item.setPosOffset(Offset(0,0));
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
     (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
@@ -320,7 +374,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         other.setIsBeingHovered(true);
       }
       other.setIsBeingHovered(true);
-    } else {
+    } else if (other is CarryTrayComponent) {
+      other.setIsBeingHovered(true);
     }
   }
 
@@ -341,7 +396,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       if ((findGame() as MyFlameGame).currentlyTargetedTableComponent == other){
         (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
       }
-    } else {
+    } else if (other is CarryTrayComponent) {
+      other.setIsBeingHovered(false);
     }
   }
   // //

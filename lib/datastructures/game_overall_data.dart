@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:project57/datastructures/carry_tray_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:tuple/tuple.dart';
@@ -9,6 +10,11 @@ class GameOverallData extends ChangeNotifier {
   List<GameRoomData> rooms = [];
   ValueNotifier<int>? currentRoomIndex;
   ValueNotifier<int>? currentRoomPositionindex;
+  GameCarryTray carryTray = GameCarryTray();
+
+  GameOverallData(){
+    carryTray.addListener(notifyListeners);
+  }
 
   void addInitialroom(){
     if (rooms.isNotEmpty) {

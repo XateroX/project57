@@ -182,4 +182,16 @@ class GameTable extends ChangeNotifier{
 
     return blankTable;
   }
+
+  static GameTable random(int normalItems, int machines, int relativeRotationIndex){
+    GameTable randomTable = GameTable(
+      relativeRotationIndex: relativeRotationIndex,
+      childItems: []
+    );
+
+    // add items in the amounts specified from the static lists //
+    // //
+
+    return randomTable;
+  }
 }
