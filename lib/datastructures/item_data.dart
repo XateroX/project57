@@ -100,6 +100,7 @@ class GameItem extends ChangeNotifier {
     notifyListeners();
   }
 
+
   void alignToGrid(int visualParentRelativeIndex){
     pos = Tuple2(
       (posOffset.dx-1).round().clamp(0, 8),

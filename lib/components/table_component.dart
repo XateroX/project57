@@ -100,6 +100,13 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     )..collisionType);
   }
 
+  @override
+  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+    if (other is MyItemComponent){
+      other.onCollisionStart(points, this);
+    }
+  }
+
   void addChildrenItemComponents(){
     for (GameItem item in table.childItems){
       Offset positionOffset = 
@@ -113,6 +120,7 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
         relativeRotationIndex: relativeRotationIndex,
         position: Vector2(positionOffset.dx,positionOffset.dy),
         baseOffset: Offset(width/2,height/2),
+        parentTableComp: this
       );
       add(itemComponent);
     }

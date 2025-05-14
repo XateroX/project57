@@ -18,12 +18,14 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   List<Offset> points = [];
   Offset baseOffset;
   int relativeRotationIndex;
+  MyTableComponent parentTableComp;
 
   MyItemComponent({
     required this.item,
     required this.points,
     required this.baseOffset,
     required this.relativeRotationIndex,
+    required this.parentTableComp,
     super.size,
     super.position,
   }){
@@ -246,15 +248,22 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       (findGame() as MyFlameGame).currentlyTargetedTableComponent != null &&
       item.parentTable != (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table
     ){
+      MyTableComponent newTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!;
+
+      Vector2 newTableBaseOffset = newTable.position - parentTableComp.position;
+
+      // set the posOffset to be relative to the new table origin
+      item.updateOffset(Offset((position.x-newTableBaseOffset.x)/size.x, (position.y-newTableBaseOffset.y)/size.y));
+
       (parent as MyTableComponent).setIsBeingHovered(false);
       item.parentTable!.removeItem(item);
-      item.parentTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table;
+      item.parentTable = newTable.table;
       item.parentTable!.addItem(item);
       parent!.children.remove(this);
-      item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
-      (findGame() as MyFlameGame).currentlyTargetedTableComponent!.setIsBeingHovered(false);
+      item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
+      newTable.setIsBeingHovered(false);
     }
-    if (item.parentTable != null){
+    else if (item.parentTable != null){
       item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
       if (parent is MyTableComponent){
         (parent as MyTableComponent).setIsBeingHovered(false);
