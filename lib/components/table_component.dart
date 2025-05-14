@@ -131,11 +131,29 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     addChildrenItemComponents();
   }
 
+  void _drawShadow(Canvas canvas){
+    // draw shadow //
+    canvas.translate(-width/2, -height/2);
+    canvas.scale(1.1, 1.1);
+    canvas.translate((1/1.05)*width/2, (1/1.05)*height/2);
+    canvas.drawPath(
+      path, 
+      Paint()
+        ..color = Colors.black.withAlpha(200)
+    );
+    canvas.translate(-(1/1.05)*width/2, -(1/1.05)*height/2);
+    canvas.scale(1/1.1, 1/1.1);
+    canvas.translate(width/2, height/2);
+    // //
+  }
+
   @override
   void render(Canvas canvas){
     super.render(canvas);
 
     canvas.translate(width/2, height/2);
+
+    // _drawShadow(canvas);
 
     canvas.drawPath(
       path, 

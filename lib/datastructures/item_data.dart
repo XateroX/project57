@@ -60,6 +60,9 @@ extension ProcessingTypeExtension on ProcessingType {
 }
 
 class GameItem extends ChangeNotifier {
+  // ignore: non_constant_identifier_names
+  static int MAX_PROCESSING = 4;
+
   late String id;
 
   // machine variables
@@ -150,10 +153,10 @@ class GameItem extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool processInputItems(){
-    bool shouldBeRecursive = false;
-    if (!isMachine) return false;
-    if (!processingReady) return false;
+  bool? processInputItems(){
+    bool? shouldBeRecursive;
+    if (!isMachine) return null;
+    if (!processingReady) return null;
     List<GameItem> tempCopyList = [...parentTable!.childItems];
 
     Tuple2<int,int> relativeInputOffset = relativeRotationTuple(inputOffset, relativeRotationIndex);
@@ -163,7 +166,8 @@ class GameItem extends ChangeNotifier {
       if (
         item.pos.item1 == pos.item1+relativeInputOffset.item1 && 
         item.pos.item2 == pos.item2+relativeInputOffset.item2 && 
-        !item.isMachine
+        !item.isMachine &&
+        item.processing.length < GameItem.MAX_PROCESSING
       ){
         parentTable!.childItems.remove(item);
 

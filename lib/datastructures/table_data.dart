@@ -44,7 +44,10 @@ class GameTable extends ChangeNotifier{
     while(recursiveMachineInteractions){
       recursiveMachineInteractions = false;
       for (GameItem item in childItems.where((element) => element.isMachine == true).toList()){
-        recursiveMachineInteractions = item.processInputItems();
+        bool? processResult = item.processInputItems();
+        if (processResult!=null){
+          recursiveMachineInteractions = processResult;
+        }
       }
     }
     recursiveMachineInteractions = true;

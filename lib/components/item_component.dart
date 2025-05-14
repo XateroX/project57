@@ -102,6 +102,23 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       ),
       paint
     );
+
+    // processing limit //
+    if (item.processing.length >= GameItem.MAX_PROCESSING){
+      Paint paint = Paint()
+        ..color=Colors.red.withAlpha(100)
+        ..style=PaintingStyle.fill;
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(0,0), 
+          width: width, 
+          height: height
+        ),
+        paint
+      );
+    }
+    // //
+
     TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: item.name,

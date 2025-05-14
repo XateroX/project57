@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
@@ -30,10 +31,11 @@ class MyFlameGame extends FlameGame
     // Set the camera to center on (0, 0)
     camera.viewfinder.position = Vector2(0,height/15);
 
-    final background = RectangleComponent(
-      size: Vector2(width, height), // width and height
+    final background = SpriteComponent(
+      size: Vector2(width*1.1, height*1.1), // width and height
       paint: Paint()..color = Colors.black, // color of the square
       position: Vector2(-width/2, -height/2), // position on the canvas
+      sprite: await Sprite.load("textures/cobblestone.jpeg"),
     );
 
     // setup the initial game data
@@ -69,7 +71,7 @@ class MyFlameGame extends FlameGame
       showGridOverlay: true
     );
 
-    world.add(background);
+    // world.add(background);
     world.add(minimap);
     world.add(table1);
     world.add(table2);
