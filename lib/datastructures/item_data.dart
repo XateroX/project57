@@ -126,6 +126,10 @@ class GameItem extends ChangeNotifier {
     id = Uuid().v4();
   }
 
+  void generateNewId(){
+    id = Uuid().v4();
+  }
+
   void addProcessing(ProcessingType process){
     processing = [...processing, process];
     notifyListeners();
@@ -227,5 +231,18 @@ class GameItem extends ChangeNotifier {
       }
     }
     return shouldBeRecursive;
+  }
+
+  GameItem copy(){
+    return GameItem(
+      parentTable: parentTable,
+      name: name,
+      isMachine: isMachine,
+      inputOffset: inputOffset,
+      outputOffset: outputOffset,
+      relativeRotationIndex: relativeRotationIndex,
+      processing: processing,
+      processingKind: processingKind,
+    );
   }
 }

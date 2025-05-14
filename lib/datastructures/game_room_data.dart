@@ -21,10 +21,14 @@ class GameRoomData extends ChangeNotifier {
       this.tables = tables;
     } else {
       this.tables = [
-        GameTable.blank(0),
-        GameTable.blank(1),
-        GameTable.blank(2),
-        GameTable.blank(3),
+        GameTable.random(2,2,0),
+        GameTable.random(2,2,1),
+        GameTable.random(2,2,2),
+        GameTable.random(2,2,3),
+        // GameTable.blank(0),
+        // GameTable.blank(1),
+        // GameTable.blank(2),
+        // GameTable.blank(3),
         // GameTable(relativeRotationIndex: 1),
         // GameTable(relativeRotationIndex: 2),
         // GameTable(relativeRotationIndex: 3),

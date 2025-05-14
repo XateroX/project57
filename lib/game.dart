@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/services.dart';
 import 'package:project57/components/carry_tray_component.dart';
 import 'package:project57/components/minimap_component.dart';
 import 'package:project57/components/table_component.dart';
@@ -27,8 +28,6 @@ class MyFlameGame extends FlameGame
   @override
   Future<void> onLoad() async {
     super.onLoad();
-
-    debugMode = true;
 
     squareSize = min(width,height);
     carryTray = CarryTrayComponent(
@@ -60,7 +59,7 @@ class MyFlameGame extends FlameGame
       currentRoomIndex: gameData.currentRoomIndex?.value,
       currentRoomPositionindex: gameData.currentRoomPositionindex?.value,
       size: Vector2(squareSize/2, squareSize/2),
-      position: Vector2(0, height/4),
+      position: Vector2(-width/10, height/4),
       showGridOverlay: true,
     );
 
@@ -90,6 +89,10 @@ class MyFlameGame extends FlameGame
 
     // Listen to changes and update table indices
     gameData.currentRoomPositionindex!.addListener(() {
+      table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
+      table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
+    });
+    gameData.currentRoomIndex!.addListener(() {
       table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
       table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
     });

@@ -80,7 +80,9 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
 
   void updateTableIndex(int newIndex){
     tableIndex = newIndex;
+    table.removeListener(_onTableValuesChanged);
     table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
+    table.addListener(_onTableValuesChanged);
     removeAll(children);
     addChildrenItemComponents();
   }

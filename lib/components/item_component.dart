@@ -11,6 +11,7 @@ import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/game.dart';
 import 'package:project57/utils/geometry.dart';
+import 'package:tuple/tuple.dart';
 
 class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks {
   bool _dragging = false;
@@ -38,6 +39,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   @override
   FutureOr<void> onLoad() {
     super.onLoad();
+    
     anchor = Anchor.center;
 
     add(RectangleHitbox(
@@ -286,63 +288,66 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
   @override
   void onDragEnd(DragEndEvent event) {
-    _dragging = false;
-    if (
-      (findGame() as MyFlameGame).currentlyTargetedTableComponent != null &&
-      item.parentTable != (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table
-    ){
-      MyTableComponent newTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!;
+    if (_dragging){
+      if (
+        (findGame() as MyFlameGame).currentlyTargetedTableComponent != null &&
+        item.parentTable != (findGame() as MyFlameGame).currentlyTargetedTableComponent!.table
+      ){
+        MyTableComponent newTable = (findGame() as MyFlameGame).currentlyTargetedTableComponent!;
 
-      Vector2 oldPosition = parentTableComp != null 
-        ? parentTableComp!.position 
-        : parentTray != null 
-          ? parentTray!.position + Vector2(parentTray!.width/2, parentTray!.height/2)
-          : Vector2(0,0);
+        Vector2 oldPosition = parentTableComp != null 
+          ? parentTableComp!.position 
+          : parentTray != null 
+            ? parentTray!.position + Vector2(parentTray!.width/2, parentTray!.height/2)
+            : Vector2(0,0);
 
-      Vector2 newTableBaseOffset = newTable.position - oldPosition;
+        Vector2 newTableBaseOffset = newTable.position - oldPosition;
 
-      // set the posOffset to be relative to the new table origin
-      item.updateOffset(
-        Offset(
-          (position.x-newTableBaseOffset.x)/size.x, 
-          (position.y-newTableBaseOffset.y)/size.y
-        )
-      );
+        // set the posOffset to be relative to the new table origin
+        item.updateOffset(
+          Offset(
+            (position.x-newTableBaseOffset.x)/size.x, 
+            (position.y-newTableBaseOffset.y)/size.y
+          )
+        );
 
-      if (parent is MyTableComponent){
-        (parent as MyTableComponent).setIsBeingHovered(false);
+        if (parent is MyTableComponent){
+          (parent as MyTableComponent).setIsBeingHovered(false);
+          item.parentTable!.removeItem(item);
+        } else if (parent is CarryTrayComponent){
+          (parent as CarryTrayComponent).setIsBeingHovered(false);
+          parentTray!.tray.removeItem(item);
+        }
+        item.parentTable = newTable.table;
+        item.parentTable!.addItem(item);
+        parent!.children.remove(this);
+        item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
+        newTable.setIsBeingHovered(false);
+      }
+      else if (
+        (findGame() as MyFlameGame).carryTray.isBeingHovered &&
+        (findGame() as MyFlameGame).carryTray.tray.items.length < 9
+      ){
+        (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
         item.parentTable!.removeItem(item);
-      } else if (parent is CarryTrayComponent){
-        (parent as CarryTrayComponent).setIsBeingHovered(false);
-        parentTray!.tray.removeItem(item);
+        item.parentTable = null;
+        parent!.children.remove(this);
+        (findGame() as MyFlameGame).carryTray.tray.addItem(item);
       }
-      item.parentTable = newTable.table;
-      item.parentTable!.addItem(item);
-      parent!.children.remove(this);
-      item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
-      newTable.setIsBeingHovered(false);
-    }
-    else if (
-      (findGame() as MyFlameGame).carryTray.isBeingHovered
-    ){
-      (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
-      item.parentTable!.removeItem(item);
-      item.parentTable = null;
-      parent!.children.remove(this);
-      (findGame() as MyFlameGame).carryTray.tray.addItem(item);
-    }
-    else if (item.parentTable != null){
-      item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
-      if (parent is MyTableComponent){
-        (parent as MyTableComponent).setIsBeingHovered(false);
-        (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
+      else if (item.parentTable != null){
+        item.parentTable!.handleItemsPlaced([item], relativeRotationIndex);
+        if (parent is MyTableComponent){
+          (parent as MyTableComponent).setIsBeingHovered(false);
+          (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
+        }
+        (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
+      } else if (parentTray != null){
+        item.setPosOffset(Offset(0,0));
       }
-      (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
-    } else if (parentTray != null){
-      item.setPosOffset(Offset(0,0));
     }
     (findGame() as MyFlameGame).currentlyDraggedComponent = null;
     (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;
+    _dragging = false;
   }
 
   @override
@@ -421,6 +426,54 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         if (event.logicalKey == LogicalKeyboardKey.keyR) {
           item.relativeRotationIndex = (item.relativeRotationIndex + 1) % 4;
           print(item.relativeRotationIndex);
+          return false;
+        }
+
+        if (
+          event.logicalKey == LogicalKeyboardKey.shiftLeft &&
+          (findGame() as MyFlameGame).carryTray.tray.items.length < 9
+        ) {
+          (findGame() as MyFlameGame).carryTray.setIsBeingHovered(false);
+          item.parentTable!.removeItem(item);
+          item.parentTable = null;
+          parent!.children.remove(this);
+          (findGame() as MyFlameGame).carryTray.tray.addItem(item);
+          _dragging = false;
+          return false;
+        }
+
+        if (
+          event.logicalKey == LogicalKeyboardKey.digit1 || 
+          event.logicalKey == LogicalKeyboardKey.digit2
+        ){
+          MyTableComponent? newTable;
+          if (
+            event.logicalKey == LogicalKeyboardKey.digit1 &&
+            parentTray != null
+          ) {
+            newTable = (findGame() as MyFlameGame).world.children.where((x) => (x is MyTableComponent)&&(x.relativeRotationIndex==0)).firstOrNull as MyTableComponent?;
+          }
+          if (
+            event.logicalKey == LogicalKeyboardKey.digit2 &&
+            parentTray != null
+          ) {
+            newTable = (findGame() as MyFlameGame).world.children.where((x) => (x is MyTableComponent)&&(x.relativeRotationIndex==1)).firstOrNull as MyTableComponent?;
+          }
+
+          (parent as CarryTrayComponent).setIsBeingHovered(false);
+          parentTray!.tray.removeItem(item);
+          
+          if (newTable == null) return false;
+          item.parentTable = newTable.table;
+          Tuple2<int,int>? newHome = item.parentTable!.findHome();
+          if (newHome == null){return false;}
+          item.pos = newHome;
+          item.posOffset = Offset(0,0);
+          item.parentTable!.addItem(item);
+          parent!.children.remove(this);
+          // item.parentTable!.handleItemsPlaced([item], newTable.relativeRotationIndex);
+          newTable.setIsBeingHovered(false);
+          _dragging = false;
           return false;
         }
       }

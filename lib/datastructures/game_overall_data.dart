@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/carry_tray_data.dart';
@@ -44,21 +46,15 @@ class GameOverallData extends ChangeNotifier {
     };
 
     if (!roomLocations.contains(newRoomPosition)){
+      int randomAmountOfItems = (Random().nextInt(10) - 3).clamp(0, 7); // 7/10 chance to get something
+      int randomAmountOfMachines = (Random().nextInt(10) - 8).clamp(0, 1); // 2/10 chance to get 1 machine
       roomLocations.add(newRoomPosition);
       GameRoomData newRoom = GameRoomData(
         tables: [
-          GameTable(
-            relativeRotationIndex: 0
-          ),
-          GameTable(
-            relativeRotationIndex: 1
-          ),
-          GameTable(
-            relativeRotationIndex: 2
-          ),
-          GameTable(
-            relativeRotationIndex: 3
-          )
+          GameTable.random(randomAmountOfItems,randomAmountOfMachines,0),
+          GameTable.random(randomAmountOfItems,randomAmountOfMachines,1),
+          GameTable.random(randomAmountOfItems,randomAmountOfMachines,2),
+          GameTable.random(randomAmountOfItems,randomAmountOfMachines,3),
         ],
         pos: newRoomPosition
       );

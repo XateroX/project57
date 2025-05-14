@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/item_data.dart';
+import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,6 +30,31 @@ class GameTable extends ChangeNotifier{
   void addItem(GameItem item){
     childItems = List.from(childItems)..add(item);
     notifyListeners();
+  }
+
+  Tuple2<int,int>? findHome(){
+    // use the first available space in the table to place the item
+    bool availableSpace = false;
+    int x = 0, y = 0;
+    while (!availableSpace){
+      List<Tuple2<int,int>> adjacentSpaces = getAllAdjacentAvailableSpaces(Tuple2(x,y));
+      availableSpace = adjacentSpaces.isNotEmpty;
+      if (!availableSpace){
+        x++;
+        if (x >= cellCount-1){
+          x = 0;
+          y++;
+          if (y >= cellCount-1){
+            print("No available space for item in table, cannot add");
+            return null;
+          }
+        }
+      } else {
+        x = adjacentSpaces.first.item1;
+        y = adjacentSpaces.first.item2;
+      }
+    } 
+    return Tuple2(x,y);
   }
 
   void removeItem(GameItem item){
@@ -83,7 +111,6 @@ class GameTable extends ChangeNotifier{
     List<Tuple2<int,int>> runningCollection = [];
     for (int i = -1; i <= 1; i++){
       for (int j = -1; j <= 1; j++){
-        if (i==0 && j==0) continue;
         if (center.item1+i < 0 || center.item1+i >= cellCount-1) continue;
         if (center.item2+j < 0 || center.item2+j >= cellCount-1) continue;
         if (
@@ -98,6 +125,36 @@ class GameTable extends ChangeNotifier{
       }
     }
     return runningCollection;
+  }
+
+  static Tuple2<int,int> getRandomValidOpenPosition(int relativeRotationIndex, List<GameItem> itemPositions){
+    int x = Random().nextInt(cellCount-1);
+    int y = Random().nextInt(cellCount-1);
+    Tuple2<int,int> badness = getBadness(relativeRotationIndex, Tuple2(x,y));
+    while (
+      (
+        itemPositions.where(
+        (element) => 
+          element.pos.item1 == x && 
+          element.pos.item2 == y
+        ).toList().isNotEmpty 
+      )
+      ||
+      (badness.item1 >= 0 && badness.item2 >= 0)
+    ){
+      x = Random().nextInt(cellCount-1);
+      y = Random().nextInt(cellCount-1);
+      badness = getBadness(relativeRotationIndex, Tuple2(x,y));
+    }
+    Tuple2<int,int> pos = Tuple2(x,y);
+    pos = switch (relativeRotationIndex) {
+      0 => Tuple2(pos.item1, pos.item2),
+      1 => Tuple2(pos.item2, 8-pos.item1),
+      2 => Tuple2(8-pos.item1, 8-pos.item2),
+      3 => Tuple2(8-pos.item2, pos.item1),
+      _ => Tuple2(pos.item1, pos.item2),
+    };
+    return pos;
   }
 
   static GameTable blank(int relativeRotationIndex){
@@ -190,6 +247,21 @@ class GameTable extends ChangeNotifier{
     );
 
     // add items in the amounts specified from the static lists //
+    for (int i = 0; i < normalItems; i++){
+      GameItem randomItem = GameItem.NORMAL_ITEMS[Random().nextInt(GameItem.NORMAL_ITEMS.length)].copy();
+      Tuple2<int,int> randomPosition = getRandomValidOpenPosition(relativeRotationIndex, randomTable.childItems);
+      randomItem.pos = (randomPosition);
+      randomItem.parentTable = randomTable;
+      randomTable.addItem(randomItem);
+    }
+
+    for (int i = 0; i < machines; i++){
+      GameItem randomItem = GameItem.MACHINE_ITEMS[Random().nextInt(GameItem.MACHINE_ITEMS.length)].copy();
+      Tuple2<int,int> randomPosition = getRandomValidOpenPosition(relativeRotationIndex, randomTable.childItems);
+      randomItem.pos = (randomPosition);
+      randomItem.parentTable = randomTable;
+      randomTable.addItem(randomItem);
+    }
     // //
 
     return randomTable;

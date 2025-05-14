@@ -191,6 +191,7 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
 
     _drawPlayerHotSpots(canvas);
     _drawRoomDoors(canvas);
+    _drawSummaryArea(canvas);
 
     canvas.drawRect(
       Rect.fromCenter(
@@ -310,6 +311,115 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
         );
       }
     }
+  }
+
+  Tuple2<int, int> getNewRoomPosition(Tuple2<int, int> currentRoomPos, int newIndex){
+    Tuple2<int, int> newRoomPosition = switch (newIndex) {
+      0 => Tuple2(currentRoomPos.item1+0, currentRoomPos.item2-1),
+      1 => Tuple2(currentRoomPos.item1+1, currentRoomPos.item2+0),
+      2 => Tuple2(currentRoomPos.item1+0, currentRoomPos.item2+1),
+      3 => Tuple2(currentRoomPos.item1-1, currentRoomPos.item2+0),
+      _ => Tuple2(0,0),
+    };
+    return newRoomPosition;
+  }
+
+  void _drawSummaryArea(Canvas canvas){
+    Size summarySize = Size(2*width/3, height);
+    double squareSize = min(summarySize.width, summarySize.height);
+
+    canvas.translate(1.05*width/2, -height/2);
+
+    canvas.drawRect(
+      Rect.fromLTWH(0,0, summarySize.width, summarySize.height), 
+      Paint()..color = Colors.white
+    );
+
+    Paint roomPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    Paint connectionPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = width / 200;
+
+    Paint highlightPaint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width / 100;
+
+    GameRoomData currentRoomData = roomsData[currentRoomIndex!];
+    Offset currentRoomOffset = Offset(
+      currentRoomData.pos.item1 * summarySize.width / 5 + summarySize.width/2,
+      currentRoomData.pos.item2 * summarySize.height / 5 + summarySize.height/2,
+    );
+    canvas.translate(-currentRoomOffset.dx + summarySize.width/2, -currentRoomOffset.dy + summarySize.height/2);
+    for (var roomData in roomsData) {
+      if (
+        roomData.pos.item1 > currentRoomData.pos.item1+2 || 
+        roomData.pos.item2 > currentRoomData.pos.item2+2 ||
+        roomData.pos.item1 < currentRoomData.pos.item1-2 || 
+        roomData.pos.item2 < currentRoomData.pos.item2-2 
+      ){continue;}
+
+      Offset roomOffset = Offset(
+        roomData.pos.item1 * summarySize.width / 5 + summarySize.width/2,
+        roomData.pos.item2 * summarySize.height / 5 + summarySize.height/2,
+      );
+
+      // Draw connections to adjacent rooms
+      for (int i = 0; i <= 3; i++) {
+        Tuple2<int, int> adjacentPos = getNewRoomPosition(roomData.pos, i);
+        if (roomsData.any((room) => room.pos == adjacentPos)) {
+          Offset adjacentOffset = Offset(
+            adjacentPos.item1 * summarySize.width / 5 + summarySize.width/2,
+            adjacentPos.item2 * summarySize.height / 5 + summarySize.height/2,
+          );
+          canvas.drawLine(roomOffset, adjacentOffset, connectionPaint);
+        }
+      }
+    }
+
+    for (var roomData in roomsData) {
+      if (
+        roomData.pos.item1 > currentRoomData.pos.item1+2 || 
+        roomData.pos.item2 > currentRoomData.pos.item2+2 ||
+        roomData.pos.item1 < currentRoomData.pos.item1-2 || 
+        roomData.pos.item2 < currentRoomData.pos.item2-2 
+      ){continue;}
+      
+      Offset roomOffset = Offset(
+        roomData.pos.item1 * summarySize.width / 5 + summarySize.width/2,
+        roomData.pos.item2 * summarySize.height / 5 + summarySize.height/2,
+      );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: roomOffset,
+          width: squareSize / 10,
+          height: squareSize / 10
+        ),
+        roomPaint,
+      );
+      if (roomData.pos == roomsData[currentRoomIndex!].pos) {
+        canvas.drawCircle(
+          roomOffset, 
+          squareSize / 10, 
+          highlightPaint
+        );
+      }
+    }
+    canvas.translate(currentRoomOffset.dx - summarySize.width/2, currentRoomOffset.dy - summarySize.height/2);
+
+    canvas.drawRect(
+      Rect.fromLTWH(0,0, 2*width/3, height),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width/100
+        ..color = Colors.grey
+    );
+
+    
+    canvas.translate(-1.05*width/2, height/2);
   }
 
   void _showDebugInfo(Canvas canvas){
