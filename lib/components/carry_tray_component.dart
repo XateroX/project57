@@ -24,6 +24,17 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
   );
 
   void _onTrayDataChanged(){
+    // List<GameItem> childrenItemsToAdd = [];
+    // for (MyItemComponent item in children.whereType<MyItemComponent>()){
+    //   if (!tray.items.map((e) => e.id).contains(item.item.id)){
+    //     remove(item);
+    //   }
+    // }
+    // for (GameItem item in tray.items){
+    //   if (!children.whereType<MyItemComponent>().map((e) => e.item.id).contains(item.id)){
+    //     childrenItemsToAdd.add(item);
+    //   }
+    // }
     removeAll(children);
     addChildrenItemComponents();
   }
@@ -33,6 +44,12 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
     super.onLoad();
     // debugMode=true;
     anchor = Anchor.center;
+
+    add(RectangleHitbox(
+      size: Vector2(width, height),
+      isSolid: true
+    ));
+
     tray.addListener(_onTrayDataChanged);
     addChildrenItemComponents();
   }
@@ -77,10 +94,6 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
   }
 
   void addChildrenItemComponents(){
-    add(RectangleHitbox(
-      size: Vector2(width, height),
-      isSolid: true
-    ));
     List<GameItem> items = List.from(tray.items);
     int divisions = 1;
     int row = 0;
@@ -102,6 +115,10 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
       );
       add(itemComponent);
     }
+    add(RectangleHitbox(
+      size: Vector2(width, height),
+      isSolid: true
+    ));
   }
 
   static Vector2 itemPositionByIndex(int index, int row, int totalItems){

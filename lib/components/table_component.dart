@@ -36,7 +36,7 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     this.showGridOverlay = false,
     this.minifiedMode = false,
   }){
-    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
+    table = gameData.rooms[gameData.currentRoomIndex].tables[tableIndex];
 
     path = getLShapedPath(
       width, 
@@ -58,9 +58,9 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
 
   @override
   FutureOr<void> onLoad() {
-    super.onLoad();
+    super.onLoad(); 
     anchor = Anchor.center;
-    addChildrenItemComponents();
+    addChildrenItemComponents(table.childItems);
     add(RectangleHitbox(
       size: Vector2(width, height),
       isSolid: true
@@ -83,36 +83,58 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
   void updateTableIndex(int newIndex){
     tableIndex = newIndex;
     table.removeListener(_onTableValuesChanged);
-    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
+    table = gameData.rooms[gameData.currentRoomIndex].tables[tableIndex];
     table.addListener(_onTableValuesChanged);
     removeAll(children);
-    addChildrenItemComponents();
+    addChildrenItemComponents(table.childItems);
+    add(
+      RectangleHitbox(
+        size: Vector2(width, height),
+        isSolid: true
+      )..collisionType
+    );
   }
 
   void _onTableValuesChanged(){
-    removeAll(children);
-    addChildrenItemComponents();
+    List<GameItem> childrenItemsToAdd = [];
+    for (MyItemComponent item in children.whereType<MyItemComponent>()){
+      if (!table.childItems.map((e) => e.id).contains(item.item.id)){
+        remove(item);
+      }
+    }
+    for (GameItem item in table.childItems){
+      if (!children.whereType<MyItemComponent>().map((e) => e.item.id).contains(item.id)){
+        childrenItemsToAdd.add(item);
+      }
+    }
+    addChildrenItemComponents(childrenItemsToAdd);
   }
 
   void _onGameDataChanged(){
-    table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
-    removeAll(children);
-    addChildrenItemComponents();
-    add(RectangleHitbox(
-      size: Vector2(width, height),
-      isSolid: true
-    )..collisionType);
+    if (
+      gameData.rooms[gameData.currentRoomIndex].tables[tableIndex].id != table.id
+    ){
+      table = gameData.rooms[gameData.currentRoomIndex].tables[tableIndex];
+      removeAll(children);
+      addChildrenItemComponents(table.childItems);
+      add(RectangleHitbox(
+        size: Vector2(width, height),
+        isSolid: true
+      )..collisionType);
+    }
   }
 
   @override
+
   void onCollisionStart(Set<Vector2> points, PositionComponent other) {
     if (other is MyItemComponent){
       other.onCollisionStart(points, this);
     }
   }
 
-  void addChildrenItemComponents(){
-    for (GameItem item in table.childItems){
+
+  void addChildrenItemComponents(List<GameItem> childrenItems){
+    for (GameItem item in childrenItems){
       Offset positionOffset = 
         item.posOffset 
         + points[item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1]
@@ -131,10 +153,6 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     }
   }
 
-  void refreshItemChildren(){
-    removeAll(children);
-    addChildrenItemComponents();
-  }
 
   void _drawShadow(Canvas canvas){
     // draw shadow //

@@ -14,10 +14,14 @@ import 'package:project57/datastructures/game_overall_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
 import 'package:project57/components/item_component.dart';
 import 'package:project57/datastructures/item_data.dart';
+import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/shaders/shadow_and_candle.dart';
 
 class MyFlameGame extends FlameGame 
   with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
+  double currentT = 0.0;
+  double lastT = 0.0;
+
   MyItemComponent? currentlyDraggedComponent;
   MyTableComponent? currentlyTargetedTableComponent;
   late CarryTrayComponent carryTray;
@@ -60,8 +64,8 @@ class MyFlameGame extends FlameGame
       moveToRoomIndex: gameData.moveCurrentRoomIndex,
       setCurrentRoomPositionindex: gameData.setCurrentRoomPositionindex,
       roomsData: gameData.rooms,
-      currentRoomIndex: gameData.currentRoomIndex?.value,
-      currentRoomPositionindex: gameData.currentRoomPositionindex?.value,
+      currentRoomIndex: gameData.currentRoomIndex,
+      currentRoomPositionindex: gameData.currentRoomPositionindex,
       size: Vector2(squareSize/2, squareSize/2),
       position: Vector2(-width/10, height/4),
       showGridOverlay: false,
@@ -71,7 +75,7 @@ class MyFlameGame extends FlameGame
       gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
-      tableIndex: gameData.currentRoomPositionindex!.value,
+      tableIndex: gameData.currentRoomPositionindex,
       relativeRotationIndex: 0,
       showGridOverlay: false
     );
@@ -80,7 +84,7 @@ class MyFlameGame extends FlameGame
       gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
-      tableIndex: (gameData.currentRoomPositionindex!.value+1)%4,
+      tableIndex: (gameData.currentRoomPositionindex+1)%4,
       relativeRotationIndex: 1,
       showGridOverlay: false
     );
@@ -92,13 +96,13 @@ class MyFlameGame extends FlameGame
     world.add(table2);
 
     // Listen to changes and update table indices
-    gameData.currentRoomPositionindex!.addListener(() {
-      table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
-      table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
+    gameData.addListener(() {
+      table1.updateTableIndex(gameData.currentRoomPositionindex);
+      table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
     });
-    gameData.currentRoomIndex!.addListener(() {
-      table1.updateTableIndex(gameData.currentRoomPositionindex!.value);
-      table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
+    gameData.addListener(() {
+      table1.updateTableIndex(gameData.currentRoomPositionindex);
+      table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
     });
 
     // camera.postProcess = PostProcessGroup(
@@ -120,6 +124,7 @@ class MyFlameGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
+    currentT += dt;
 
     if (targetPosition != null) {
       camera.viewfinder.position = Vector2(
@@ -134,6 +139,24 @@ class MyFlameGame extends FlameGame
       camera.viewfinder.zoom = camera.viewfinder.zoom + (targetZoom! - camera.viewfinder.zoom) * zoomLerpSpeed * dt;
     } else {
       targetZoom = 1.0;
+    }
+
+    if (currentT - lastT > 1.0){
+      _checkMachinesForInputs();
+      lastT = currentT;
+    }
+  }
+
+  void _checkMachinesForInputs(){
+    for (GameRoomData roomData in gameData.rooms) {
+      for (GameTable tableData in roomData.tables) {
+        List<GameItem> tempChildItems = List.from(tableData.childItems);
+        for (GameItem item in tempChildItems) {
+          if (item.isMachine && item.processing.length < GameItem.MAX_PROCESSING) {
+            item.processInputItems();
+          }
+        }
+      }
     }
   }
 

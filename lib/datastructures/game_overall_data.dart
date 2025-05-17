@@ -10,8 +10,8 @@ import 'package:tuple/tuple.dart';
 class GameOverallData extends ChangeNotifier {
   Set<Tuple2<int,int>> roomLocations = {};
   List<GameRoomData> rooms = [];
-  ValueNotifier<int>? currentRoomIndex;
-  ValueNotifier<int>? currentRoomPositionindex;
+  int currentRoomIndex = 0;
+  int currentRoomPositionindex = 0;
   GameCarryTray carryTray = GameCarryTray();
 
   GameOverallData(){
@@ -25,8 +25,8 @@ class GameOverallData extends ChangeNotifier {
       GameRoomData initialRoom = GameRoomData(); 
       initialRoom.addListener(notifyListeners);
       rooms.add(initialRoom);
-      currentRoomIndex = ValueNotifier(0);
-      currentRoomPositionindex = ValueNotifier(0);
+      currentRoomIndex = 0;
+      currentRoomPositionindex = 0;
       roomLocations.add(Tuple2(0,0));
     }
   }
@@ -74,12 +74,12 @@ class GameOverallData extends ChangeNotifier {
   }
 
   void setCurrentRoomPositionindex(int newIndex){
-    currentRoomPositionindex!.value = newIndex;
+    currentRoomPositionindex = newIndex;
     notifyListeners();
   }
 
   void moveCurrentRoomIndex(int newIndex){
-    Tuple2<int,int> newRoomPosition = getNewRoomPositionFromRoom(rooms[currentRoomIndex!.value].pos, newIndex);
+    Tuple2<int,int> newRoomPosition = getNewRoomPositionFromRoom(rooms[currentRoomIndex].pos, newIndex);
 
     if (!roomLocations.contains(newRoomPosition)){
       // For generating rooms when testing //
@@ -88,7 +88,7 @@ class GameOverallData extends ChangeNotifier {
       // notifyListeners();
       // //
     } else {
-      currentRoomIndex!.value = rooms.indexOf(rooms.where((e) => e.pos == newRoomPosition).first);
+      currentRoomIndex = rooms.indexOf(rooms.where((e) => e.pos == newRoomPosition).first);
     }
     notifyListeners();
   }

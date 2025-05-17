@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
@@ -121,19 +123,22 @@ class GameItem extends ChangeNotifier {
       parentTable: null,
       name: "Iron Pot",
       isMachine: true,
-      processingKind: ProcessingType.BOILED
+      processingKind: ProcessingType.BOILED,
+      processingDuration: 10,
     ),
     GameItem(
       parentTable: null,
       name: "P&M",
       isMachine: true,
-      processingKind: ProcessingType.GROUND
+      processingKind: ProcessingType.GROUND,
+      processingDuration: 3,
     ),
     GameItem(
       parentTable: null,
       name: "Stove",
       isMachine: true,
-      processingKind: ProcessingType.COOKED
+      processingKind: ProcessingType.COOKED,
+      processingDuration: 15,
     ),
   ];
 
@@ -141,8 +146,12 @@ class GameItem extends ChangeNotifier {
 
   // machine variables
   bool isMachine;
+  bool currentlyProcessing = false;
+  double processingRatio = 0.0;
+  double processingDuration;
   Tuple2<int,int> inputOffset;
   Tuple2<int,int> outputOffset;
+  bool processingReady = true;
 
   String name;
   // grid indices
@@ -157,7 +166,6 @@ class GameItem extends ChangeNotifier {
   // processing done to this item
   List<ProcessingType> processing;
   ProcessingType processingKind;
-  bool processingReady = true;
 
   GameItem({
     required this.parentTable,
@@ -168,6 +176,7 @@ class GameItem extends ChangeNotifier {
     this.relativeRotationIndex = 0,
     this.processing = const [],
     this.processingKind = ProcessingType.NONE,
+    this.processingDuration = 1.0,
   }){
     id = Uuid().v4();
   }
@@ -252,31 +261,48 @@ class GameItem extends ChangeNotifier {
         !item.isMachine &&
         item.processing.length < GameItem.MAX_PROCESSING
       ){
-        parentTable!.childItems.remove(item);
+        parentTable!.removeItem(item);
 
-        item.addProcessing(processingKind);
-        item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
+        // Do the processing on the inputs
+        void processMyItems(){
+          item.addProcessing(processingKind);
+          item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
 
-        for (int i = 0; i < processingKind.count; i++){
-          GameItem newItem = GameItem(
-            parentTable: item.parentTable,
-            name: item.name,
-            isMachine: item.isMachine,
-            inputOffset: item.inputOffset,
-            outputOffset: item.outputOffset,
-            relativeRotationIndex: item.relativeRotationIndex,
-            processing: item.processing,
-            processingKind: item.processingKind,
-          );
-          newItem.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
-          parentTable!.addItem(newItem);
+          for (int i = 0; i < processingKind.count; i++){
+            GameItem newItem = GameItem(
+              parentTable: item.parentTable,
+              name: item.name,
+              isMachine: item.isMachine,
+              inputOffset: item.inputOffset,
+              outputOffset: item.outputOffset,
+              relativeRotationIndex: item.relativeRotationIndex,
+              processing: item.processing,
+              processingKind: item.processingKind,
+            );
+            newItem.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
+            parentTable!.addItem(newItem);
+          }
+          shouldBeRecursive = true;
+          processingReady = true;
+          currentlyProcessing = false;
+          parentTable!.spaceOutAllItems();
+          notifyListeners();
         }
-        shouldBeRecursive = true;
+
+        currentlyProcessing = true;
         processingReady = false;
+        completeMachineProcessingIn(Duration(milliseconds: (processingDuration*1000).toInt()), processMyItems);
         notifyListeners();
       }
     }
     return shouldBeRecursive;
+  }
+
+  Future<void> completeMachineProcessingIn(
+    Duration duration,
+    FutureOr<void> Function() processCompletedCallback, 
+  ){
+    return Future.delayed(duration, processCompletedCallback);
   }
 
   GameItem copy(){
@@ -289,6 +315,7 @@ class GameItem extends ChangeNotifier {
       relativeRotationIndex: relativeRotationIndex,
       processing: processing,
       processingKind: processingKind,
+      processingDuration: processingDuration
     );
   }
 }

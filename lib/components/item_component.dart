@@ -24,6 +24,10 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   CarryTrayComponent? parentTray;
   bool minifiedMode = false;
 
+  double ghostOpacity = 0.0;
+
+  double machineProgressRatio = 0.0;
+
   MyItemComponent({
     required this.item,
     this.points,
@@ -51,6 +55,11 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     // Listen to changes in table data
     item.addListener(_onItemDataChanged);
+
+    machineProgressRatio = item.processingRatio;
+    if (!item.currentlyProcessing){
+      machineProgressRatio = 0.0;
+    }
   }
 
   @override
@@ -87,6 +96,30 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     return item.pos.item2 * (GameTable.cellCount-1) + item.pos.item1;
   }
 
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    if (item.posOffset == Offset(0,0)){
+      ghostOpacity = 0.0;
+    } else {
+      ghostOpacity = ghostOpacity + (1.0 - ghostOpacity) * 3.0 * dt;
+    }
+
+    if (item.isMachine){
+      if (item.currentlyProcessing){
+        if (machineProgressRatio < 1.0){
+          machineProgressRatio += dt/item.processingDuration;
+          if (machineProgressRatio > 1.0){
+            machineProgressRatio = 1.0;
+          }
+        }
+      } else {
+        machineProgressRatio = 0.0;
+      }
+      item.processingRatio = machineProgressRatio;
+    }
+  }
 
   @override
   void render(Canvas canvas){
@@ -95,29 +128,63 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     // _renderStyleDebug(canvas);
     _renderStyleMinimal(canvas);
 
+    _drawGhostItem(canvas);
+
     canvas.translate(-width/2, -height/2);
   }
 
-  void _renderStyleDebug(Canvas canvas){
-    // if machine, handle all machine drawing
-    _drawMachineDetails(canvas);
+  void _drawGhostItem(Canvas canvas){
+    if (item.posOffset == Offset(0,0)){return;}
+    if (item.parentTable == null){return;}
+    Offset ghostOffset = baseOffset + points![itemPointsIndex()] - position.toOffset();
 
+    // Paint paint = Paint()
+    //   ..color=Colors.white.withAlpha(30)
+    //   ..style=PaintingStyle.stroke
+    //   ..strokeWidth=width/30;
+    Paint fillPaint = Paint()
+      ..color = Color.fromARGB((30*ghostOpacity).toInt(), 141, 141, 141)
+      ..style=PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: ghostOffset, 
+        width: width, 
+        height: height
+      ),
+      fillPaint
+    );
+    // canvas.drawRect(
+    //   Rect.fromCenter(
+    //     center: ghostOffset, 
+    //     width: width, 
+    //     height: height
+    //   ),
+    //   paint
+    // );
+  }
+
+  void _renderStyleDebug(Canvas canvas){
     // draw the basic shape and name 
     _drawBasicShapeAndName(canvas);
 
     // draw anything indicating what processing has been done
     _drawProcessedEffects(canvas);
+
+    // if machine, handle all machine drawing
+    _drawMachineDetails(canvas);
   }
 
   void _renderStyleMinimal(Canvas canvas){
-    // if machine, handle all machine drawing
-    _drawMachineDetailsMinimal(canvas);
-
     // draw the basic shape and name 
     _drawBasicShapeAndNameMinimal(canvas);
 
     // draw anything indicating what processing has been done
     _drawProcessedEffectsMinimal(canvas);
+
+    canvas.translate(0, -height/5.5); // No idea why i need this to line things up XD
+
+    // if machine, handle all machine drawing
+    _drawMachineDetailsMinimal(canvas);
   }
 
   void _drawBasicShapeAndName(Canvas canvas){
@@ -248,7 +315,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void _drawProcessedEffects(Canvas canvas){
     if (minifiedMode){return;}
 
-    canvas.translate(-width/2, -height/3);
+    canvas.translate(-width/2, -height/2);
     if (item.processing.isNotEmpty){
       int n = 1;
       for (ProcessingType process in item.processing){
@@ -366,11 +433,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     if (item.isMachine){
       Paint paint = Paint()
-        ..color=Colors.green
-        ..style=PaintingStyle.fill
-        ..strokeWidth=width/10;
-
-
+        ..color=Colors.white.withAlpha(100)
+        ..style=PaintingStyle.fill;
       Paint inAreaPaint = Paint()
         ..color=Color.fromARGB(100, 199, 253, 168)
         ..style=PaintingStyle.stroke
@@ -390,6 +454,11 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
         outputOffset,
         width/6,
         outAreaPaint
+      );
+
+      canvas.drawRect(
+        Rect.fromLTWH(-width/2,-height/2, width*(machineProgressRatio), height), 
+        paint
       );
 
       // canvas.drawCircle(inputOffset.scale(0.7, 0.7), width/15, paint);
