@@ -18,7 +18,7 @@ import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/shaders/shadow_and_candle.dart';
 
 class MyFlameGame extends FlameGame 
-  with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
+  with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection, MouseMovementDetector  {
   double currentT = 0.0;
   double lastT = 0.0;
 
@@ -30,6 +30,8 @@ class MyFlameGame extends FlameGame
   double get height => size.y;
   late double squareSize;
   GameOverallData gameData = GameOverallData();
+
+  ValueNotifier<List<Vector2>> listOfCandlePositions = ValueNotifier([]);
 
   @override
   Future<void> onLoad() async {
@@ -89,6 +91,9 @@ class MyFlameGame extends FlameGame
       showGridOverlay: false
     );
 
+    listOfCandlePositions.value.add(Vector2(width/5,height/3));
+    listOfCandlePositions.value.add(Vector2(width - width/5,height/3));
+
     // world.add(background);
     world.add(minimap);
     world.add(carryTray);
@@ -105,15 +110,18 @@ class MyFlameGame extends FlameGame
       table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
     });
 
-    // camera.postProcess = PostProcessGroup(
-    //   postProcesses: [
-    //     PostProcessSequentialGroup(
-    //       postProcesses: [
-    //         ShadowAndCandlePostProcess(),
-    //       ],
-    //     ),
-    //   ],
-    // );
+    camera.postProcess = PostProcessGroup(
+      postProcesses: [
+        PostProcessSequentialGroup(
+          postProcesses: [
+            ShadowAndCandlePostProcess(
+              mousePos:mousePos,
+              extraCandleLocations:listOfCandlePositions,
+            ),
+          ],
+        ),
+      ],
+    );
   } 
 
   Vector2? targetPosition;
@@ -161,6 +169,13 @@ class MyFlameGame extends FlameGame
   }
 
   @override
+  void render(Canvas canvas){
+    super.render(canvas);
+    canvas.drawCircle(mousePos.value.toOffset(), 5, Paint()..color = const Color(0xFFFF0000));
+  }
+
+  @override
+
   KeyEventResult onKeyEvent(
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
@@ -174,5 +189,14 @@ class MyFlameGame extends FlameGame
     }
 
     return KeyEventResult.ignored;
+  }
+
+  ValueNotifier<Vector2> mousePos = ValueNotifier(Vector2(500,500));
+
+  @override
+  void onMouseMove(PointerHoverInfo info) {
+    // info.eventPosition.global is the Vector2 relative to the game viewport
+    mousePos.value = info.eventPosition.global;
+    super.onMouseMove(info);
   }
 }

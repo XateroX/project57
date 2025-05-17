@@ -28,7 +28,8 @@ class _BaseWidgetState extends State<BaseWidget> {
   Widget build(BuildContext context) {
     
     return GameWidget(
-      game: MyFlameGame()
+      game: MyFlameGame(),
+      mouseCursor: SystemMouseCursors.basic,
     );
   }
 }

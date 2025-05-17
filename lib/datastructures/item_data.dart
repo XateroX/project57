@@ -63,7 +63,7 @@ extension ProcessingTypeExtension on ProcessingType {
 
 class GameItem extends ChangeNotifier {
   // ignore: non_constant_identifier_names
-  static int MAX_PROCESSING = 4;
+  static int MAX_PROCESSING = 5;
   static List<GameItem> NORMAL_ITEMS = [
     GameItem(
       parentTable: null,
