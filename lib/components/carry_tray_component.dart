@@ -44,6 +44,11 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    // _renderStyleDebug(canvas);
+    _renderStyleMinimal(canvas);
+  }
+
+  void _renderStyleDebug(Canvas canvas){
     canvas.drawRect(
       Rect.fromLTRB(0, 0, width, height),
       Paint()..color = Colors.white    
@@ -54,6 +59,20 @@ class CarryTrayComponent extends PositionComponent with HasGameReference<MyFlame
         ..style = PaintingStyle.stroke
         ..strokeWidth = width/50
         ..color = isBeingHovered ? Colors.green : Colors.grey  
+    );
+  }
+
+  void _renderStyleMinimal(Canvas canvas){
+    canvas.drawRect(
+      Rect.fromLTRB(0, 0, width, height),
+      Paint()..color = Colors.black    
+    );
+    canvas.drawRect(
+      Rect.fromLTRB(0, 0, width, height),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width/50
+        ..color = isBeingHovered ? Colors.green : Colors.white  
     );
   }
 

@@ -92,6 +92,13 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void render(Canvas canvas){
     canvas.translate(width/2, height/2);
 
+    // _renderStyleDebug(canvas);
+    _renderStyleMinimal(canvas);
+
+    canvas.translate(-width/2, -height/2);
+  }
+
+  void _renderStyleDebug(Canvas canvas){
     // if machine, handle all machine drawing
     _drawMachineDetails(canvas);
 
@@ -100,6 +107,17 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     // draw anything indicating what processing has been done
     _drawProcessedEffects(canvas);
+  }
+
+  void _renderStyleMinimal(Canvas canvas){
+    // if machine, handle all machine drawing
+    _drawMachineDetailsMinimal(canvas);
+
+    // draw the basic shape and name 
+    _drawBasicShapeAndNameMinimal(canvas);
+
+    // draw anything indicating what processing has been done
+    _drawProcessedEffectsMinimal(canvas);
   }
 
   void _drawBasicShapeAndName(Canvas canvas){
@@ -228,6 +246,163 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   }
 
   void _drawProcessedEffects(Canvas canvas){
+    if (minifiedMode){return;}
+
+    canvas.translate(-width/2, -height/3);
+    if (item.processing.isNotEmpty){
+      int n = 1;
+      for (ProcessingType process in item.processing){
+        Paint paint = Paint()
+          ..color=process.color
+          ..style=PaintingStyle.fill;
+        Paint outline = Paint()
+          ..color=Colors.black//process.color
+          ..style=PaintingStyle.stroke
+          ..strokeWidth=width/50;
+        canvas.drawCircle(
+          Offset(
+            width*(n/(1+item.processing.length)), 
+            0
+          ),
+          width/(10+ item.processing.length),
+          paint
+        );
+        canvas.drawCircle(
+          Offset(
+            width*(n/(1+item.processing.length)), 
+            0
+          ),
+          width/(10+ item.processing.length),
+          outline
+        );
+        n++;
+      }
+    }
+    canvas.translate(width/2, height/2);
+  }
+
+  void _drawBasicShapeAndNameMinimal(Canvas canvas){
+    Paint paint = Paint()
+      ..color=Colors.white
+      ..style=PaintingStyle.stroke
+      ..strokeWidth=width/30;
+    Paint fillPaint = Paint()
+      ..color=Colors.black
+      ..style=PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(0,0), 
+        width: width, 
+        height: height
+      ),
+      fillPaint
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(0,0), 
+        width: width, 
+        height: height
+      ),
+      paint
+    );
+
+    // processing limit //
+    if (item.processing.length >= GameItem.MAX_PROCESSING){
+      Paint paint = Paint()
+        ..color=Colors.red.withAlpha(50)
+        ..style=PaintingStyle.fill;
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset(0,0), 
+          width: width, 
+          height: height
+        ),
+        paint
+      );
+    }
+    // //
+
+    if (minifiedMode){return;}
+    TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: item.name,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: ((4/item.name.length).clamp(0.4, 1))*width/3,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width/2, -textPainter.height/2),
+    );
+  }
+
+  void _drawMachineDetailsMinimal(Canvas canvas){
+    // check if the input and output offsets are valid
+    int inputOffsetIndex = item.inputOffset.item2 * (GameTable.cellCount-1) + item.inputOffset.item1;
+    int outputOffsetIndex = item.outputOffset.item2 * (GameTable.cellCount-1) + item.outputOffset.item1;
+
+    if (
+      !(
+        itemPointsIndex()+inputOffsetIndex >= 0 && 
+        itemPointsIndex()+inputOffsetIndex < GameTable.cellCount*GameTable.cellCount && 
+        itemPointsIndex()+outputOffsetIndex >= 0 && 
+        itemPointsIndex()+outputOffsetIndex < GameTable.cellCount*GameTable.cellCount
+      )
+      || 
+      (
+        parentTray != null
+      )
+    ) return;
+
+    Offset inputOffset = Offset(width*item.inputOffset.item1,height*item.inputOffset.item2);
+    Offset outputOffset = Offset(width*item.outputOffset.item1,height*item.outputOffset.item2);
+
+    inputOffset = relativeRotationOffset(inputOffset, (item.relativeRotationIndex+relativeRotationIndex)%4);
+    outputOffset = relativeRotationOffset(outputOffset, (item.relativeRotationIndex+relativeRotationIndex)%4);
+
+    if (item.isMachine){
+      Paint paint = Paint()
+        ..color=Colors.green
+        ..style=PaintingStyle.fill
+        ..strokeWidth=width/10;
+
+
+      Paint inAreaPaint = Paint()
+        ..color=Color.fromARGB(100, 199, 253, 168)
+        ..style=PaintingStyle.stroke
+        ..strokeWidth=width/10;
+      Paint outAreaPaint = Paint()
+        ..color=Color.fromARGB(100, 168, 247, 253)
+        ..style=PaintingStyle.stroke
+        ..strokeWidth=width/10;
+
+      canvas.drawCircle(
+        inputOffset,
+        width/6,
+        inAreaPaint
+      );
+
+      canvas.drawCircle(
+        outputOffset,
+        width/6,
+        outAreaPaint
+      );
+
+      // canvas.drawCircle(inputOffset.scale(0.7, 0.7), width/15, paint);
+      // canvas.drawCircle(outputOffset.scale(0.7, 0.7), width/15, paint);
+      // canvas.drawLine(
+      //   inputOffset.scale(0.7, 0.7),
+      //   outputOffset.scale(0.7, 0.7),
+      //   paint
+      // );
+    }
+  }
+
+  void _drawProcessedEffectsMinimal(Canvas canvas){
     if (minifiedMode){return;}
 
     canvas.translate(-width/2, -height/3);

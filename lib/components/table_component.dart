@@ -158,14 +158,15 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
 
     canvas.translate(width/2, height/2);
 
-    // _drawShadow(canvas);
+    // _renderStyleDebug(canvas);
+    _renderStyleMinimal(canvas);
 
-    canvas.drawPath(
-      path, 
-      Paint()
-        ..color = Colors.white
-    );
+    _renderGlobal(canvas);
 
+    canvas.translate(-width/2, -height/2);
+  }
+
+  void _renderGlobal(Canvas canvas){
     if (debug){
       for (Offset point in points){
         Offset relativeOffset = Offset(point.dx/(width/GameTable.cellCount),point.dy/(height/GameTable.cellCount));
@@ -208,14 +209,38 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
         }
       }
     }
+  }
+
+  void _renderStyleDebug(Canvas canvas){
+    // _drawShadow(canvas);
+
+    canvas.drawPath(
+      path, 
+      Paint()
+        ..color = Colors.white
+    );
 
     canvas.drawPath(
       path, Paint()
         ..color = isBeingHovered ? Colors.green : Colors.grey
         ..style = PaintingStyle.stroke
-        ..strokeWidth = width/50
+        ..strokeWidth = width/100
+    );
+  }
+
+  void _renderStyleMinimal(Canvas canvas){
+    canvas.drawPath(
+      path, 
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = Colors.black
     );
 
-    canvas.translate(-width/2, -height/2);
+    canvas.drawPath(
+      path, Paint()
+        ..color = isBeingHovered ? Colors.green : Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width/100
+    );
   }
 }
