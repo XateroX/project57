@@ -69,12 +69,52 @@ class GameItem extends ChangeNotifier {
     ),
     GameItem(
       parentTable: null,
-      name: "Herbs"
+      name: "Mixed Herbs"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Jamba Juice"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Bean Stalk"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Chaulk"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Gillyweed"
     ),
     GameItem(
       parentTable: null,
       name: "Water"
-    )
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Blue Crystal"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Purple Crystal"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "White Crystal"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Green Crystal"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Huge Mushroom"
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Forest Mushroom"
+    ),
   ];
   static List<GameItem> MACHINE_ITEMS = [
     GameItem(
@@ -84,11 +124,17 @@ class GameItem extends ChangeNotifier {
       processingKind: ProcessingType.BOILED
     ),
     GameItem(
-        parentTable: null,
-        name: "P&M",
-        isMachine: true,
-        processingKind: ProcessingType.GROUND
-      )
+      parentTable: null,
+      name: "P&M",
+      isMachine: true,
+      processingKind: ProcessingType.GROUND
+    ),
+    GameItem(
+      parentTable: null,
+      name: "Stove",
+      isMachine: true,
+      processingKind: ProcessingType.COOKED
+    ),
   ];
 
   late String id;

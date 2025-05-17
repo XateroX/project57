@@ -22,6 +22,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   int relativeRotationIndex;
   MyTableComponent? parentTableComp;
   CarryTrayComponent? parentTray;
+  bool minifiedMode = false;
 
   MyItemComponent({
     required this.item,
@@ -30,6 +31,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     required this.relativeRotationIndex,
     this.parentTableComp,
     this.parentTray,
+    this.minifiedMode = false,
     super.size,
     super.position,
   }){
@@ -141,6 +143,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     }
     // //
 
+    if (minifiedMode){return;}
     TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: item.name,
@@ -225,6 +228,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   }
 
   void _drawProcessedEffects(Canvas canvas){
+    if (minifiedMode){return;}
+
     canvas.translate(-width/2, -height/3);
     if (item.processing.isNotEmpty){
       int n = 1;
@@ -280,7 +285,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void onDragUpdate(DragUpdateEvent event) {
     if (_dragging) {
       // Follow the mouse by updating position relative to drag start
-      position = position + event.canvasDelta;
+      position = position + event.localDelta;
       item.updateOffset(Offset(position.x/size.x, position.y/size.y));
       // (findGame() as MyFlameGame).currentlyDraggedComponent = this;
     }
@@ -376,6 +381,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       return;
     }
     if (other is MyTableComponent) {
+      if (other.minifiedMode){return;}
       // print("Its working, it's working!!");
       if (!other.isBeingHovered){
         (findGame() as MyFlameGame).currentlyTargetedTableComponent = other;
@@ -400,6 +406,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       return;
     }
     if (other is MyTableComponent) {
+      if (other.minifiedMode){return;}
       other.setIsBeingHovered(false);
       if ((findGame() as MyFlameGame).currentlyTargetedTableComponent == other){
         (findGame() as MyFlameGame).currentlyTargetedTableComponent = null;

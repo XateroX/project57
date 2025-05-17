@@ -20,6 +20,7 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
   bool debug;
   bool showGridOverlay;
   bool isBeingHovered=false;
+  bool minifiedMode=false;
 
   // basic drawing info
   late Path path;
@@ -32,7 +33,8 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
     required this.tableIndex,
     required this.relativeRotationIndex,
     this.debug = false,
-    this.showGridOverlay = false
+    this.showGridOverlay = false,
+    this.minifiedMode = false,
   }){
     table = gameData.rooms[gameData.currentRoomIndex!.value].tables[tableIndex];
 
@@ -122,7 +124,8 @@ class MyTableComponent extends PositionComponent with CollisionCallbacks {
         relativeRotationIndex: relativeRotationIndex,
         position: Vector2(positionOffset.dx,positionOffset.dy),
         baseOffset: Offset(width/2,height/2),
-        parentTableComp: this
+        parentTableComp: this,
+        minifiedMode: minifiedMode,
       );
       add(itemComponent);
     }

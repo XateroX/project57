@@ -31,37 +31,62 @@ class GameOverallData extends ChangeNotifier {
     }
   }
 
+  void createDungeonLayout(int numberOfRooms){
+    for (int i = 0; i < numberOfRooms; i++){
+      GameRoomData randomRoomInDungeon = rooms[Random().nextInt(rooms.length)];
+      int randomIndexToMove = Random().nextInt(4); 
+
+      Tuple2<int,int> newRoomPosition = getNewRoomPositionFromRoom(randomRoomInDungeon.pos, randomIndexToMove);
+
+      if (!roomLocations.contains(newRoomPosition)){
+        addRoomAtPosition(newRoomPosition);
+      }
+    }
+  } 
+
+  void addRoomAtPosition(Tuple2<int,int> newRoomPosition){
+    if (roomLocations.contains(newRoomPosition)){return;}
+
+    int randomAmountOfItems = (Random().nextInt(10) - 3).clamp(0, 7); // 7/10 chance to get something
+    int randomAmountOfMachines = (Random().nextInt(10) - 8).clamp(0, 1); // 2/10 chance to get 1 machine
+    roomLocations.add(newRoomPosition);
+    GameRoomData newRoom = GameRoomData(
+      tables: [
+        GameTable.random(randomAmountOfItems,randomAmountOfMachines,0),
+        GameTable.random(randomAmountOfItems,randomAmountOfMachines,1),
+        GameTable.random(randomAmountOfItems,randomAmountOfMachines,2),
+        GameTable.random(randomAmountOfItems,randomAmountOfMachines,3),
+      ],
+      pos: newRoomPosition
+    );
+    newRoom.addListener(notifyListeners);
+    rooms.add(newRoom);
+  }
+
+  Tuple2<int,int> getNewRoomPositionFromRoom(Tuple2<int,int> existingPosition, int newRoomIndex){
+    return switch (newRoomIndex) {
+      0 => Tuple2(existingPosition.item1+0, existingPosition.item2-1),
+      1 => Tuple2(existingPosition.item1+1, existingPosition.item2+0),
+      2 => Tuple2(existingPosition.item1+0, existingPosition.item2+1),
+      3 => Tuple2(existingPosition.item1-1, existingPosition.item2+0),
+      _ => Tuple2(0,0),
+    };
+  }
+
   void setCurrentRoomPositionindex(int newIndex){
     currentRoomPositionindex!.value = newIndex;
     notifyListeners();
   }
 
   void moveCurrentRoomIndex(int newIndex){
-    Tuple2<int,int> newRoomPosition = switch (newIndex) {
-      0 => Tuple2(rooms[currentRoomIndex!.value].pos.item1+0, rooms[currentRoomIndex!.value].pos.item2-1),
-      1 => Tuple2(rooms[currentRoomIndex!.value].pos.item1+1, rooms[currentRoomIndex!.value].pos.item2+0),
-      2 => Tuple2(rooms[currentRoomIndex!.value].pos.item1+0, rooms[currentRoomIndex!.value].pos.item2+1),
-      3 => Tuple2(rooms[currentRoomIndex!.value].pos.item1-1, rooms[currentRoomIndex!.value].pos.item2+0),
-      _ => Tuple2(0,0),
-    };
+    Tuple2<int,int> newRoomPosition = getNewRoomPositionFromRoom(rooms[currentRoomIndex!.value].pos, newIndex);
 
     if (!roomLocations.contains(newRoomPosition)){
-      int randomAmountOfItems = (Random().nextInt(10) - 3).clamp(0, 7); // 7/10 chance to get something
-      int randomAmountOfMachines = (Random().nextInt(10) - 8).clamp(0, 1); // 2/10 chance to get 1 machine
-      roomLocations.add(newRoomPosition);
-      GameRoomData newRoom = GameRoomData(
-        tables: [
-          GameTable.random(randomAmountOfItems,randomAmountOfMachines,0),
-          GameTable.random(randomAmountOfItems,randomAmountOfMachines,1),
-          GameTable.random(randomAmountOfItems,randomAmountOfMachines,2),
-          GameTable.random(randomAmountOfItems,randomAmountOfMachines,3),
-        ],
-        pos: newRoomPosition
-      );
-      newRoom.addListener(notifyListeners);
-      rooms.add(newRoom);
-      currentRoomIndex!.value = rooms.indexOf(newRoom);
-      notifyListeners();
+      // For generating rooms when testing //
+      // addRoomAtPosition(newRoomPosition);
+      // currentRoomIndex!.value = rooms.length-1;
+      // notifyListeners();
+      // //
     } else {
       currentRoomIndex!.value = rooms.indexOf(rooms.where((e) => e.pos == newRoomPosition).first);
     }

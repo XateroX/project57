@@ -21,9 +21,9 @@ void main() {
     sin(uTime * 5.0 + uv.x * 10.0) +
     sin(uTime * 6.0 + uv.x * 10.1) +
     sin(uTime * 9.0 + uv.x * 10.2) +
-    sin(uTime * 10.0 + uv.x * 10.3) +
-    sin(uTime * 20.0 + uv.x * 10.4) + 
-    sin(uTime * 100.0 + uv.x * 10.4)
+    sin(uTime * 10.0 + uv.x * 10.3) //+
+    // sin(uTime * 20.0 + uv.x * 10.4) + 
+    // sin(uTime * 100.0 + uv.x * 10.4)
   );
   vec4 candleLight = vec4(0.098, 0.2902, 0.4471, 0.0) * flicker;
 
@@ -31,7 +31,7 @@ void main() {
   for (int i = 0; i < 10; i++) {
     float distanceToCandle = distance(uv, uCandles[i]);
 
-    shadow *= clamp(distanceToCandle/0.2, 0.0, 1.0);
+    shadow *= clamp(distanceToCandle/0.25, 0.0, 1.0);
   }
 
   // add candleLight

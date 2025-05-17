@@ -141,7 +141,8 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       tableIndex: 0,
       relativeRotationIndex: 0,
       showGridOverlay: showGridOverlay,
-      debug: debug
+      debug: debug,
+      minifiedMode: true,
     );
     final MyTableComponent tableB = MyTableComponent(
       gameData: gameData,
@@ -150,7 +151,8 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       tableIndex: 1,
       relativeRotationIndex: 1,
       showGridOverlay: showGridOverlay,
-      debug: debug
+      debug: debug,
+      minifiedMode: true,
     );
     final MyTableComponent tableC = MyTableComponent(
       gameData: gameData,
@@ -159,7 +161,8 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       tableIndex: 2,
       relativeRotationIndex: 2,
       showGridOverlay: showGridOverlay,
-      debug: debug
+      debug: debug,
+      minifiedMode: true,
     );
     final MyTableComponent tableD = MyTableComponent(
       gameData: gameData,
@@ -168,7 +171,8 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       tableIndex: 3,
       relativeRotationIndex: 3,
       showGridOverlay: showGridOverlay,
-      debug: debug
+      debug: debug,
+      minifiedMode: true,
     );
     addAll([tableA, tableB, tableC, tableD]);
   }

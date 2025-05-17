@@ -17,7 +17,7 @@ import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/shaders/shadow_and_candle.dart';
 
 class MyFlameGame extends FlameGame 
-  with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection  {
+  with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
   MyItemComponent? currentlyDraggedComponent;
   MyTableComponent? currentlyTargetedTableComponent;
   late CarryTrayComponent carryTray;
@@ -53,6 +53,8 @@ class MyFlameGame extends FlameGame
     // setup the initial game data
     gameData.addInitialroom();
 
+    gameData.createDungeonLayout(20);
+
     final MyMinimapComponent minimap = MyMinimapComponent(
       gameData: gameData,
       moveToRoomIndex: gameData.moveCurrentRoomIndex,
@@ -62,7 +64,7 @@ class MyFlameGame extends FlameGame
       currentRoomPositionindex: gameData.currentRoomPositionindex?.value,
       size: Vector2(squareSize/2, squareSize/2),
       position: Vector2(-width/10, height/4),
-      showGridOverlay: true,
+      showGridOverlay: false,
     );
 
     final MyTableComponent table1 = MyTableComponent(
@@ -71,7 +73,7 @@ class MyFlameGame extends FlameGame
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
       tableIndex: gameData.currentRoomPositionindex!.value,
       relativeRotationIndex: 0,
-      showGridOverlay: true
+      showGridOverlay: false
     );
 
     final MyTableComponent table2 = MyTableComponent(
@@ -80,7 +82,7 @@ class MyFlameGame extends FlameGame
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
       tableIndex: (gameData.currentRoomPositionindex!.value+1)%4,
       relativeRotationIndex: 1,
-      showGridOverlay: true
+      showGridOverlay: false
     );
 
     // world.add(background);
@@ -99,16 +101,16 @@ class MyFlameGame extends FlameGame
       table2.updateTableIndex((gameData.currentRoomPositionindex!.value + 1) % 4);
     });
 
-    camera.postProcess = PostProcessGroup(
-      postProcesses: [
-        PostProcessSequentialGroup(
-          postProcesses: [
-            ShadowAndCandlePostProcess(),
-          ],
-        ),
-      ],
-    );
-  }
+    // camera.postProcess = PostProcessGroup(
+    //   postProcesses: [
+    //     PostProcessSequentialGroup(
+    //       postProcesses: [
+    //         ShadowAndCandlePostProcess(),
+    //       ],
+    //     ),
+    //   ],
+    // );
+  } 
 
   Vector2? targetPosition;
   double? targetZoom;
@@ -133,5 +135,21 @@ class MyFlameGame extends FlameGame
     } else {
       targetZoom = 1.0;
     }
+  }
+
+  @override
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    super.onKeyEvent(event, keysPressed);
+
+    if (event.logicalKey == LogicalKeyboardKey.space) {
+      targetZoom = 1.0;
+      targetPosition = Vector2(0,height/15);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
   }
 }
