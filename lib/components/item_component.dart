@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -27,6 +28,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   double ghostOpacity = 0.0;
 
   double machineProgressRatio = 0.0;
+
+  double totalTime = 0.0;
 
   MyItemComponent({
     required this.item,
@@ -60,6 +63,11 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     if (!item.currentlyProcessing){
       machineProgressRatio = 0.0;
     }
+
+    // debugging
+    // if (true && (findGame() as MyFlameGame).detailViewingItem.value == null){
+    //   setAsSummaryItem();
+    // }
   }
 
   @override
@@ -100,6 +108,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   void update(double dt) {
     super.update(dt);
 
+    totalTime += dt;
+
     if (item.posOffset == Offset(0,0)){
       ghostOpacity = 0.0;
     } else {
@@ -109,15 +119,17 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     if (item.isMachine){
       if (item.currentlyProcessing){
         if (machineProgressRatio < 1.0){
-          machineProgressRatio += dt/item.processingDuration;
+          machineProgressRatio += 1/item.processingDuration;
           if (machineProgressRatio > 1.0){
             machineProgressRatio = 1.0;
           }
+          item.processingRatio = machineProgressRatio;
+          item.processMyItems(dt);
         }
       } else {
         machineProgressRatio = 0.0;
+        item.processingRatio = 0.0;
       }
-      item.processingRatio = machineProgressRatio;
     }
   }
 
@@ -129,6 +141,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     _renderStyleMinimal(canvas);
 
     _drawGhostItem(canvas);
+    _drawHighlightWhenSummaryVisible(canvas);
 
     canvas.translate(-width/2, -height/2);
   }
@@ -161,6 +174,25 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     //   ),
     //   paint
     // );
+  }
+
+  void _drawHighlightWhenSummaryVisible(Canvas canvas){
+    if ((findGame() as MyFlameGame).detailViewingItem.value != item){return;}
+
+    double intensityValue = sin(5*totalTime).abs();
+
+    Paint fillPaint = Paint()
+      ..color = Color.fromARGB((255*intensityValue).toInt(), 78, 255, 96)
+      ..style=PaintingStyle.stroke
+      ..strokeWidth=width/20;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset.zero, 
+        width: width*1.25, 
+        height: height*1.25
+      ),
+      fillPaint
+    );
   }
 
   void _renderStyleDebug(Canvas canvas){
@@ -737,8 +769,21 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     // }
   }
 
+  @override
   void onTapUp(TapUpEvent event){
-    (findGame() as MyFlameGame).targetPosition = Vector2(
+    if (item.isMachine){
+      if (parentTray != null) return;
+      if (item.itemsBeingProcessed.isNotEmpty){
+        GameItem itemToBeSummarised = item.itemsBeingProcessed[0];        
+        (findGame() as MyFlameGame).detailViewingItem.value = itemToBeSummarised;
+      }
+    } else {
+      setAsSummaryItem();
+    }
+  }
+
+  void setAsSummaryItem(){
+    (findGame() as MyFlameGame).targetPosition.value = Vector2(
       absoluteCenter.x + (findGame() as MyFlameGame).size.x/4, 
       (findGame() as MyFlameGame).camera.viewfinder.position.y
     );
@@ -746,17 +791,17 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   }
 
   void relaxCamera(){
-    (findGame() as MyFlameGame).targetPosition = null;
+    (findGame() as MyFlameGame).targetPosition.value = null;
     (findGame() as MyFlameGame).targetZoom = null;
   }
 
   void centerCameraAfterMove(){
     if (parentTableComp != null){
-      (findGame() as MyFlameGame).targetPosition = parentTableComp!.absoluteCenter;
-      (findGame() as MyFlameGame).targetZoom = 1.2;
+      (findGame() as MyFlameGame).targetPosition.value = parentTableComp!.absoluteCenter*0.5;
+      (findGame() as MyFlameGame).targetZoom = 1.0;
     } else {
-      (findGame() as MyFlameGame).targetPosition = parentTray!.absoluteCenter;
-      (findGame() as MyFlameGame).targetZoom = 1.5;
+      (findGame() as MyFlameGame).targetPosition.value = parentTray!.absoluteCenter*0.5;
+      (findGame() as MyFlameGame).targetZoom = 1.0;
     }
   }
 }

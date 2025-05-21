@@ -138,7 +138,7 @@ class MyFlameGame extends FlameGame
     // );
   } 
 
-  Vector2? targetPosition;
+  ValueNotifier<Vector2?> targetPosition = ValueNotifier(null);
   double? targetZoom;
   double zoomLerpSpeed = 4.0;
   double lerpSpeed = 4.0;
@@ -148,13 +148,13 @@ class MyFlameGame extends FlameGame
     super.update(dt);
     currentT += dt;
 
-    if (targetPosition != null) {
+    if (targetPosition.value != null) {
       camera.viewfinder.position = Vector2(
-        camera.viewfinder.position.x + (targetPosition!.x - camera.viewfinder.position.x) * lerpSpeed * dt,
-        camera.viewfinder.position.y + (targetPosition!.y - camera.viewfinder.position.y) * lerpSpeed * dt,
+        camera.viewfinder.position.x + (targetPosition.value!.x - camera.viewfinder.position.x) * lerpSpeed * dt,
+        camera.viewfinder.position.y + (targetPosition.value!.y - camera.viewfinder.position.y) * lerpSpeed * dt,
       );
     } else {
-      targetPosition = Vector2(0,height/15);
+      targetPosition.value = Vector2(0,height/15);
     }
 
     if (targetZoom != null) {
@@ -198,7 +198,7 @@ class MyFlameGame extends FlameGame
 
     if (event.logicalKey == LogicalKeyboardKey.space) {
       targetZoom = 1.0;
-      targetPosition = Vector2(0,height/15);
+      targetPosition.value = Vector2(0,height/15);
       detailViewingItem.value = null;
       return KeyEventResult.handled;
     }

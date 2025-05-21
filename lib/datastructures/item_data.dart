@@ -5,6 +5,7 @@ import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
+import 'package:vector_math/vector_math_64.dart' as v64;
 
 // ignore: camel_case_types
 enum ProcessingType {
@@ -124,21 +125,21 @@ class GameItem extends ChangeNotifier {
       name: "Iron Pot",
       isMachine: true,
       processingKind: ProcessingType.BOILED,
-      processingDuration: 10,
+      processingDuration: 10*10,
     ),
     GameItem(
       parentTable: null,
       name: "P&M",
       isMachine: true,
       processingKind: ProcessingType.GROUND,
-      processingDuration: 3,
+      processingDuration: 20*60,
     ),
     GameItem(
       parentTable: null,
       name: "Stove",
       isMachine: true,
       processingKind: ProcessingType.COOKED,
-      processingDuration: 15,
+      processingDuration: 15*60,
     ),
   ];
 
@@ -148,10 +149,12 @@ class GameItem extends ChangeNotifier {
   bool isMachine;
   bool currentlyProcessing = false;
   double processingRatio = 0.0;
-  double processingDuration;
+  int processingDuration;
   Tuple2<int,int> inputOffset;
   Tuple2<int,int> outputOffset;
   bool processingReady = true;
+  List<GameItem> itemsBeingProcessed = [];
+  ProcessingType processingKind;
 
   String name;
   // grid indices
@@ -165,7 +168,8 @@ class GameItem extends ChangeNotifier {
 
   // processing done to this item
   List<ProcessingType> processing;
-  ProcessingType processingKind;
+  // (Wetness, Temperature, PH, Groundness)
+  v64.Vector4 stateVector = v64.Vector4(0,0,0,0);
 
   GameItem({
     required this.parentTable,
@@ -176,7 +180,7 @@ class GameItem extends ChangeNotifier {
     this.relativeRotationIndex = 0,
     this.processing = const [],
     this.processingKind = ProcessingType.NONE,
-    this.processingDuration = 1.0,
+    this.processingDuration = 600,
   }){
     id = Uuid().v4();
   }
@@ -188,6 +192,19 @@ class GameItem extends ChangeNotifier {
   void addProcessing(ProcessingType process){
     processing = [...processing, process];
     notifyListeners();
+  }
+
+  v64.Vector4 _getProcessingVector(){
+    switch (processingKind) {
+      case ProcessingType.BOILED:
+        return v64.Vector4(0.5,0.5,0,0);
+      case ProcessingType.GROUND:
+        return v64.Vector4(0.0,0.1,0.0,0.5);
+      case ProcessingType.COOKED:
+        return v64.Vector4(0.0,0.5,0.0,0.0);
+      case ProcessingType.NONE:
+        return v64.Vector4(0,0,0,0);
+      }
   }
 
 
@@ -261,41 +278,34 @@ class GameItem extends ChangeNotifier {
         !item.isMachine &&
         item.processing.length < GameItem.MAX_PROCESSING
       ){
+        // add it to the list and set flags
         parentTable!.removeItem(item);
-
-        // Do the processing on the inputs
-        void processMyItems(){
-          item.addProcessing(processingKind);
-          item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
-
-          for (int i = 0; i < processingKind.count; i++){
-            GameItem newItem = GameItem(
-              parentTable: item.parentTable,
-              name: item.name,
-              isMachine: item.isMachine,
-              inputOffset: item.inputOffset,
-              outputOffset: item.outputOffset,
-              relativeRotationIndex: item.relativeRotationIndex,
-              processing: item.processing,
-              processingKind: item.processingKind,
-            );
-            newItem.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
-            parentTable!.addItem(newItem);
-          }
-          shouldBeRecursive = true;
-          processingReady = true;
-          currentlyProcessing = false;
-          parentTable!.spaceOutAllItems();
-          notifyListeners();
-        }
-
+        itemsBeingProcessed.add(item);
         currentlyProcessing = true;
         processingReady = false;
-        completeMachineProcessingIn(Duration(milliseconds: (processingDuration*1000).toInt()), processMyItems);
-        notifyListeners();
       }
     }
     return shouldBeRecursive;
+  }
+
+  void processMyItems(double dt){
+    List<GameItem> tempItemsBeingProcessed = [...itemsBeingProcessed];
+
+    Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
+    for (GameItem item in tempItemsBeingProcessed){
+      v64.Vector4 processingVector = _getProcessingVector().scaled(1/(5*processingDuration));
+      item.stateVector.add(processingVector); 
+
+      if (processingRatio >= 1.0){
+        item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
+        itemsBeingProcessed.remove(item);
+        parentTable!.addItem(item);
+        if (itemsBeingProcessed.isEmpty){
+          currentlyProcessing = false;
+          processingReady = true;
+        }
+      }
+    }
   }
 
   Future<void> completeMachineProcessingIn(
