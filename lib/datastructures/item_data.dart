@@ -12,7 +12,8 @@ enum ProcessingType {
   NONE,
   GROUND,
   BOILED,
-  COOKED
+  COOKED,
+  COOLED,
 }
 
 extension ProcessingTypeExtension on ProcessingType {
@@ -26,6 +27,8 @@ extension ProcessingTypeExtension on ProcessingType {
         return "Boiled";
       case ProcessingType.COOKED:
         return "Cooked";
+      case ProcessingType.COOLED:
+        return "Cooled";
       default:
         return "None";
     }
@@ -41,6 +44,8 @@ extension ProcessingTypeExtension on ProcessingType {
         return Colors.lightBlueAccent;
       case ProcessingType.COOKED:
         return Colors.red;
+      case ProcessingType.COOLED:
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -55,6 +60,8 @@ extension ProcessingTypeExtension on ProcessingType {
       case ProcessingType.BOILED:
         return 1;
       case ProcessingType.COOKED:
+        return 1;
+      case ProcessingType.COOLED:
         return 1;
       default:
         return 0;
@@ -141,6 +148,13 @@ class GameItem extends ChangeNotifier {
       processingKind: ProcessingType.COOKED,
       processingDuration: 15*60,
     ),
+    GameItem(
+      parentTable: null,
+      name: "Cooler",
+      isMachine: true,
+      processingKind: ProcessingType.COOLED,
+      processingDuration: 30*60,
+    ),
   ];
 
   late String id;
@@ -197,11 +211,13 @@ class GameItem extends ChangeNotifier {
   v64.Vector4 _getProcessingVector(){
     switch (processingKind) {
       case ProcessingType.BOILED:
-        return v64.Vector4(0.5,0.5,0,0);
+        return v64.Vector4(0.5,0.5,0.0,0.0);
       case ProcessingType.GROUND:
         return v64.Vector4(0.0,0.1,0.0,0.5);
       case ProcessingType.COOKED:
         return v64.Vector4(0.0,0.5,0.0,0.0);
+      case ProcessingType.COOLED:
+        return v64.Vector4(0.0,-1.0,0.0,-0.5);
       case ProcessingType.NONE:
         return v64.Vector4(0,0,0,0);
       }
@@ -293,7 +309,7 @@ class GameItem extends ChangeNotifier {
 
     Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
     for (GameItem item in tempItemsBeingProcessed){
-      v64.Vector4 processingVector = _getProcessingVector().scaled(1/(5*processingDuration));
+      v64.Vector4 processingVector = _getProcessingVector().scaled((1+stateVector[3])/(5*processingDuration));
       item.stateVector.add(processingVector); 
 
       if (processingRatio >= 1.0){
