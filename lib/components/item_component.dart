@@ -13,7 +13,7 @@ import 'package:project57/game.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
 
-class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks {
+class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks, TapCallbacks {
   bool _dragging = false;
   late Vector2 _basePosition;
   GameItem item;
@@ -735,6 +735,14 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     // } else {
     //   return false;
     // }
+  }
+
+  void onTapUp(TapUpEvent event){
+    (findGame() as MyFlameGame).targetPosition = Vector2(
+      absoluteCenter.x + (findGame() as MyFlameGame).size.x/4, 
+      (findGame() as MyFlameGame).camera.viewfinder.position.y
+    );
+    (findGame() as MyFlameGame).detailViewingItem.value = item;
   }
 
   void relaxCamera(){

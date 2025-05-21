@@ -8,6 +8,7 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:project57/components/carry_tray_component.dart';
+import 'package:project57/components/item_summary_component.dart';
 import 'package:project57/components/minimap_component.dart';
 import 'package:project57/components/table_component.dart';
 import 'package:project57/datastructures/game_overall_data.dart';
@@ -25,6 +26,7 @@ class MyFlameGame extends FlameGame
   MyItemComponent? currentlyDraggedComponent;
   MyTableComponent? currentlyTargetedTableComponent;
   late CarryTrayComponent carryTray;
+  ValueNotifier<GameItem?> detailViewingItem = ValueNotifier(null);
 
   double get width => size.x;
   double get height => size.y;
@@ -91,6 +93,17 @@ class MyFlameGame extends FlameGame
       showGridOverlay: false
     );
 
+    final MyItemSummaryComponent itemSummary = MyItemSummaryComponent(
+      size: Vector2(
+        (width/2) *0.9, 
+        height *0.9
+      ),
+      position: Vector2(
+        width/4,
+        height/2,
+      )
+    ); 
+
     listOfCandlePositions.value.add(Vector2(width/5,height/3));
     listOfCandlePositions.value.add(Vector2(width - width/5,height/3));
 
@@ -99,6 +112,7 @@ class MyFlameGame extends FlameGame
     world.add(carryTray);
     world.add(table1);
     world.add(table2);
+    world.add(itemSummary);
 
     // Listen to changes and update table indices
     gameData.addListener(() {
@@ -110,18 +124,18 @@ class MyFlameGame extends FlameGame
       table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
     });
 
-    camera.postProcess = PostProcessGroup(
-      postProcesses: [
-        PostProcessSequentialGroup(
-          postProcesses: [
-            ShadowAndCandlePostProcess(
-              mousePos:mousePos,
-              extraCandleLocations:listOfCandlePositions,
-            ),
-          ],
-        ),
-      ],
-    );
+    // camera.postProcess = PostProcessGroup(
+    //   postProcesses: [
+    //     PostProcessSequentialGroup(
+    //       postProcesses: [
+    //         ShadowAndCandlePostProcess(
+    //           mousePos:mousePos,
+    //           extraCandleLocations:listOfCandlePositions,
+    //         ),
+    //       ],
+    //     ),
+    //   ],
+    // );
   } 
 
   Vector2? targetPosition;
@@ -185,6 +199,7 @@ class MyFlameGame extends FlameGame
     if (event.logicalKey == LogicalKeyboardKey.space) {
       targetZoom = 1.0;
       targetPosition = Vector2(0,height/15);
+      detailViewingItem.value = null;
       return KeyEventResult.handled;
     }
 
