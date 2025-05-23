@@ -14,8 +14,9 @@ import 'package:project57/game.dart';
 import 'package:project57/utils/geometry.dart';
 import 'package:tuple/tuple.dart';
 
-class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks, TapCallbacks {
+class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks, TapCallbacks, HoverCallbacks {
   bool _dragging = false;
+  late bool _beingHovered;
   late Vector2 _basePosition;
   GameItem item;
   List<Offset>? points = [];
@@ -43,6 +44,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     super.position,
   }){
     _basePosition = position;
+    _beingHovered = false;
   }
 
   @override
@@ -128,6 +130,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     _drawGhostItem(canvas);
     _drawHighlightWhenSummaryVisible(canvas);
+    _drawBeingHoveredIndicator(canvas);
 
     canvas.translate(-width/2, -height/2);
   }
@@ -169,6 +172,22 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     Paint fillPaint = Paint()
       ..color = Color.fromARGB((255*intensityValue).toInt(), 78, 255, 96)
+      ..style=PaintingStyle.stroke
+      ..strokeWidth=width/20;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset.zero, 
+        width: width*1.25, 
+        height: height*1.25
+      ),
+      fillPaint
+    );
+  }
+
+  void _drawBeingHoveredIndicator(Canvas canvas){
+    if (!_beingHovered){return;}
+    Paint fillPaint = Paint()
+      ..color = Colors.red
       ..style=PaintingStyle.stroke
       ..strokeWidth=width/20;
     canvas.drawRect(
@@ -543,7 +562,29 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   }
 
   @override
+  void onTapUp(TapUpEvent event){
+    if (item.isMachine){
+      if (parentTray != null) return;
+      if (item.itemsBeingProcessed.isNotEmpty){
+        GameItem itemToBeSummarised = item.itemsBeingProcessed[0];        
+        (findGame() as MyFlameGame).detailViewingItem.value = itemToBeSummarised;
+      }
+    } else {
+      setAsSummaryItem();
+    }
+  }
 
+  @override
+  void onHoverEnter() {
+    _beingHovered = true;
+  }
+
+  @override
+  void onHoverExit(){
+    _beingHovered = false;
+  }
+
+  @override
   void onDragUpdate(DragUpdateEvent event) {
     if (_dragging) {
       // Follow the mouse by updating position relative to drag start
@@ -683,18 +724,18 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
   @override
   bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     final game = findGame() as MyFlameGame;
-    if (
-      game.currentlyDraggedComponent==null || 
-      (
-        game.currentlyDraggedComponent!=null && 
-        game.currentlyDraggedComponent!.item.id != item.id
-      )
-    ) {
-      return true;
-    }
 
-    // if (_dragging){
-      if (event is KeyDownEvent) {
+    if (event is KeyDownEvent) {
+      // DRAG KEYBINDINGS //
+      if (
+        !(
+          game.currentlyDraggedComponent==null || 
+          (
+            game.currentlyDraggedComponent!=null && 
+            game.currentlyDraggedComponent!.item.id != item.id
+          )
+        )
+      ) {
         if (event.logicalKey == LogicalKeyboardKey.keyR) {
           item.relativeRotationIndex = (item.relativeRotationIndex + 1) % 4;
           print(item.relativeRotationIndex);
@@ -749,23 +790,18 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
           return false;
         }
       }
-      return true;
-    // } else {
-    //   return false;
-    // }
-  }
+      // //
 
-  @override
-  void onTapUp(TapUpEvent event){
-    if (item.isMachine){
-      if (parentTray != null) return;
-      if (item.itemsBeingProcessed.isNotEmpty){
-        GameItem itemToBeSummarised = item.itemsBeingProcessed[0];        
-        (findGame() as MyFlameGame).detailViewingItem.value = itemToBeSummarised;
+      // OTHER KEYBINDINGS //
+      if (event.logicalKey == LogicalKeyboardKey.keyS) {
+        if (item.isMachine && item.currentlyProcessing && item.processingRatio < 1 && _beingHovered){
+          item.processingRatio=1.0;
+          return false;
+        }
       }
-    } else {
-      setAsSummaryItem();
+      // //
     }
+    return true;
   }
 
   void setAsSummaryItem(){

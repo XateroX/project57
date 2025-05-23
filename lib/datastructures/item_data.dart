@@ -132,28 +132,28 @@ class GameItem extends ChangeNotifier {
       name: "Iron Pot",
       isMachine: true,
       processingKind: ProcessingType.BOILED,
-      processingDuration: 10*10,
+      processingDuration: 30*10,
     ),
     GameItem(
       parentTable: null,
       name: "P&M",
       isMachine: true,
       processingKind: ProcessingType.GROUND,
-      processingDuration: 20*60,
+      processingDuration: 6*60,
     ),
     GameItem(
       parentTable: null,
       name: "Stove",
       isMachine: true,
       processingKind: ProcessingType.COOKED,
-      processingDuration: 15*60,
+      processingDuration: 5*60,
     ),
     GameItem(
       parentTable: null,
       name: "Cooler",
       isMachine: true,
       processingKind: ProcessingType.COOLED,
-      processingDuration: 30*60,
+      processingDuration: 10*60,
     ),
   ];
 
@@ -309,7 +309,7 @@ class GameItem extends ChangeNotifier {
 
     Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
     for (GameItem item in tempItemsBeingProcessed){
-      v64.Vector4 processingVector = _getProcessingVector().scaled((1+stateVector[3])/(processingDuration));
+      v64.Vector4 processingVector = _getProcessingVector().scaled((1+item.stateVector[3])/(processingDuration));
       item.stateVector.add(processingVector); 
 
       if (processingRatio >= 1.0){
@@ -335,7 +335,7 @@ class GameItem extends ChangeNotifier {
   void gameTick(){
     if (isMachine){
       if (currentlyProcessing){
-        if (processingRatio < 1.0){
+        if (processingRatio <= 1.0){
           processingRatio += 1/processingDuration;
           if (processingRatio > 1.0){
             processingRatio = 1.0;

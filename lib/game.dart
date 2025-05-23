@@ -50,6 +50,7 @@ class MyFlameGame extends FlameGame
     // shift the camera to the center of the screen
     // Set the camera to center on (0, 0)
     camera.viewfinder.position = Vector2(0,height/15);
+    currentPosition.value = camera.viewfinder.position;
 
     final background = SpriteComponent(
       size: Vector2(width*1.1, height*1.1), // width and height
@@ -141,6 +142,7 @@ class MyFlameGame extends FlameGame
   } 
 
   ValueNotifier<Vector2?> targetPosition = ValueNotifier(null);
+  ValueNotifier<Vector2?> currentPosition = ValueNotifier(null);
   double? targetZoom;
   double zoomLerpSpeed = 4.0;
   double lerpSpeed = 4.0;
@@ -155,6 +157,7 @@ class MyFlameGame extends FlameGame
         camera.viewfinder.position.x + (targetPosition.value!.x - camera.viewfinder.position.x) * lerpSpeed * dt,
         camera.viewfinder.position.y + (targetPosition.value!.y - camera.viewfinder.position.y) * lerpSpeed * dt,
       );
+      currentPosition.value = camera.viewfinder.position;
     } else {
       targetPosition.value = Vector2(0,height/15);
     }

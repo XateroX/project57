@@ -259,6 +259,18 @@ class GameTable extends ChangeNotifier{
       randomItem.parentTable = randomTable;
       randomTable.addItem(randomItem);
     }
+
+    Tuple2<int,int> randomPosition = getRandomValidOpenPosition(relativeRotationIndex, randomTable.childItems);
+    GameItem nicePot = GameItem(
+      parentTable: randomTable,
+      name: "Iron Pot",
+      isMachine: true,
+      processingKind: ProcessingType.BOILED,
+      processingDuration: 30*10,
+    );
+    nicePot.pos = randomPosition; 
+    randomTable.addItem(nicePot);
+
     // //
 
     return randomTable;

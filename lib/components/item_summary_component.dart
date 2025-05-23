@@ -27,7 +27,8 @@ class MyItemSummaryComponent extends PositionComponent {
     super.onLoad();
     anchor = Anchor.center;
     (findGame() as MyFlameGame).detailViewingItem.addListener(_summaryItemChanged);
-    (findGame() as MyFlameGame).targetPosition.addListener(_cameraTargetPositionChanged);
+    // (findGame() as MyFlameGame).targetPosition.addListener(_cameraTargetPositionChanged);
+    (findGame() as MyFlameGame).currentPosition.addListener(_cameraActualPositionChanged);
 
     if ((findGame() as MyFlameGame).detailViewingItem.value == null){
       position += Vector2(10*width, 0);
@@ -40,6 +41,14 @@ class MyItemSummaryComponent extends PositionComponent {
   void _cameraTargetPositionChanged(){
     if (summaryItem != null){
       position = ((findGame() as MyFlameGame).targetPosition.value ?? Vector2(0,0))+Vector2(width, height/2);
+    } else {
+      position += Vector2(10*width, 0);
+    }
+  }
+
+  void _cameraActualPositionChanged(){
+    if (summaryItem != null){
+      position = ((findGame() as MyFlameGame).currentPosition.value ?? Vector2(0,0))+Vector2(width, height/2);
     } else {
       position += Vector2(10*width, 0);
     }
@@ -118,6 +127,7 @@ class MyItemSummaryComponent extends PositionComponent {
     // take a section of the area as the plot area
     double plotYMax = 3.0*(summaryItem!.stateVector[3]+1);
     double plotXMax = 3.0*(summaryItem!.stateVector[3]+1);
+    double divisionSize = max((2*plotXMax/6).floor(),1) * 0.5;
 
     canvas.drawRect(
       Rect.fromCenter(center: Offset(0,0), 
@@ -136,12 +146,11 @@ class MyItemSummaryComponent extends PositionComponent {
     //   sin(0.2*totalTime).abs()*plotHeight/3
     // );
     Offset translateOffset = Offset(
-      (summaryItem!.stateVector.x / plotXMax)*plotWidth,
-      (summaryItem!.stateVector.y / plotYMax)*plotHeight
+      (summaryItem!.stateVector.x / plotXMax)*plotWidth/2,
+      (summaryItem!.stateVector.y / plotYMax)*plotHeight/2,
     );
 
     // draw axes (pixel-space units)
-    // canvas.scale(1/(summaryItem!.stateVector[3]+1));
     canvas.translate(-translateOffset.dx, translateOffset.dy);
     if ((translateOffset.dx) > -plotWidth/2 && (translateOffset.dx) < plotWidth/2){
       canvas.drawLine(
@@ -164,8 +173,8 @@ class MyItemSummaryComponent extends PositionComponent {
 
     // draw gray sub-axes at intervals with labels
     for (int i = -100; i < 100; i++) {
-      double x = i * (plotWidth / 10) * (1/(summaryItem!.stateVector[3]+1));
-      if ((x - translateOffset.dx) > -plotWidth / 2 && (x - translateOffset.dx) < plotWidth / 2) {
+      double x = (i * (divisionSize) / plotXMax)*(plotWidth/2);
+      if ((x-translateOffset.dx) >= -plotWidth / 2 && (x-translateOffset.dx) <= plotWidth / 2) {
         canvas.drawLine(
           Offset(x, plotHeight / 2 - translateOffset.dy),
           Offset(x, -plotHeight / 2 - translateOffset.dy),
@@ -175,7 +184,7 @@ class MyItemSummaryComponent extends PositionComponent {
         );
         TextPainter textPainter = TextPainter(
           text: TextSpan(
-            text: ((plotXMax * x/plotWidth) * (1/(summaryItem!.stateVector[3]+1))).toStringAsFixed(1),
+            text: (i * (divisionSize)).toStringAsFixed(1),
             style: TextStyle(
               color: Colors.black,
               fontSize: width / 50,
@@ -189,8 +198,8 @@ class MyItemSummaryComponent extends PositionComponent {
           Offset(x - 1.3*textPainter.width, plotHeight/2 - translateOffset.dy - 1.3*textPainter.height),
         );
       }
-      double y = i * (plotHeight / 10) * (1/(summaryItem!.stateVector[3]+1));
-      if ((y + translateOffset.dy) > -plotHeight / 2 && (y + translateOffset.dy) < plotHeight / 2) {
+      double y = (i * (divisionSize) / plotYMax)*(plotHeight/2);
+      if ((y+translateOffset.dy) >= -plotHeight/2 && (y+translateOffset.dy) <= plotHeight/2) {
         canvas.drawLine(
           Offset(-plotWidth / 2 + translateOffset.dx, y),
           Offset(plotWidth / 2 + translateOffset.dx, y),
@@ -200,7 +209,7 @@ class MyItemSummaryComponent extends PositionComponent {
         );
         TextPainter textPainter = TextPainter(
           text: TextSpan(
-            text: ((plotYMax * y/plotHeight) * (1/(summaryItem!.stateVector[3]+1))).toStringAsFixed(1),
+            text: (-i * (divisionSize)).toStringAsFixed(1),
             style: TextStyle(
               color: Colors.black,
               fontSize: width / 60,
@@ -216,7 +225,6 @@ class MyItemSummaryComponent extends PositionComponent {
       }
     }
     canvas.translate(translateOffset.dx, -translateOffset.dy);
-    // canvas.scale((summaryItem!.stateVector[3]+1));
 
     _drawItemCircle(canvas);
   }
