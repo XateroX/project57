@@ -28,7 +28,7 @@ class GameTable extends ChangeNotifier{
   }
 
   void addItem(GameItem item){
-    childItems = List.from(childItems)..add(item);
+    childItems = [...childItems,item];
     notifyListeners();
   }
 
@@ -58,7 +58,7 @@ class GameTable extends ChangeNotifier{
   }
 
   void removeItem(GameItem item){
-    childItems = List.from(childItems)..remove(item);
+    childItems = [...childItems.where((e) => e.id != item.id)];
     notifyListeners();
   }
 
@@ -266,7 +266,7 @@ class GameTable extends ChangeNotifier{
       name: "Iron Pot",
       isMachine: true,
       processingKind: ProcessingType.BOILED,
-      processingDuration: 30*10,
+      processingDuration: 100,
     );
     nicePot.pos = randomPosition; 
     randomTable.addItem(nicePot);

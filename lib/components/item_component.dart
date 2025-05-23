@@ -17,6 +17,7 @@ import 'package:tuple/tuple.dart';
 class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHandler, HasGameReference<MyFlameGame>, CollisionCallbacks, TapCallbacks, HoverCallbacks {
   bool _dragging = false;
   late bool _beingHovered;
+  late bool markForCombining;
   late Vector2 _basePosition;
   GameItem item;
   List<Offset>? points = [];
@@ -52,6 +53,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     super.onLoad();
     
     anchor = Anchor.center;
+    markForCombining = (findGame() as MyFlameGame).itemsToCombine.value.contains(item);
 
     add(RectangleHitbox(
       size: Vector2(width, height),
@@ -60,6 +62,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     // Listen to changes in table data
     item.addListener(_onItemDataChanged);
+
+    (findGame() as MyFlameGame).itemsToCombine.addListener(_onCombineChildrenChange);
 
     machineProgressRatio = item.processingRatio;
     if (!item.currentlyProcessing){
@@ -72,9 +76,14 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     // }
   }
 
+  void _onCombineChildrenChange(){
+    markForCombining = (findGame() as MyFlameGame).itemsToCombine.value.contains(item);
+  }
+
   @override
   void onRemove() {
     item.removeListener(_onItemDataChanged);
+    (findGame() as MyFlameGame).itemsToCombine.removeListener(_onCombineChildrenChange);
     super.onRemove();
   }
 
@@ -130,7 +139,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
     _drawGhostItem(canvas);
     _drawHighlightWhenSummaryVisible(canvas);
-    _drawBeingHoveredIndicator(canvas);
+    _drawIndicators(canvas);
 
     canvas.translate(-width/2, -height/2);
   }
@@ -184,20 +193,37 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
     );
   }
 
-  void _drawBeingHoveredIndicator(Canvas canvas){
-    if (!_beingHovered){return;}
-    Paint fillPaint = Paint()
+  void _drawIndicators(Canvas canvas){
+    double intensityValue = sin(5*totalTime).abs();
+
+    if (_beingHovered){
+      Paint fillPaint = Paint()
       ..color = Colors.red
       ..style=PaintingStyle.stroke
       ..strokeWidth=width/20;
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset.zero, 
-        width: width*1.25, 
-        height: height*1.25
-      ),
-      fillPaint
-    );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset.zero, 
+          width: width*1.25, 
+          height: height*1.25
+        ),
+        fillPaint
+      );
+    }
+    if (markForCombining){
+      Paint fillPaint = Paint()
+      ..color = Colors.deepPurple.withAlpha((intensityValue*255).toInt())
+      ..style=PaintingStyle.stroke
+      ..strokeWidth=width/10;
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset.zero, 
+          width: width*1.25, 
+          height: height*1.25
+        ),
+        fillPaint
+      );
+    }
   }
 
   void _renderStyleDebug(Canvas canvas){
@@ -563,11 +589,22 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
 
   @override
   void onTapUp(TapUpEvent event){
+    MyFlameGame game = (findGame() as MyFlameGame);
+    if (game.combineMode && !item.isMachine){
+      if (game.itemsToCombine.value.contains(item)){
+        game.itemsToCombine.value = [...game.itemsToCombine.value.where((x) => x != item)];
+      } else {
+        game.itemsToCombine.value = [...game.itemsToCombine.value,item];
+      }
+      return;
+    }
+
     if (item.isMachine){
       if (parentTray != null) return;
       if (item.itemsBeingProcessed.isNotEmpty){
         GameItem itemToBeSummarised = item.itemsBeingProcessed[0];        
         (findGame() as MyFlameGame).detailViewingItem.value = itemToBeSummarised;
+        (findGame() as MyFlameGame).currentColor.value = Colors.white;
       }
     } else {
       setAsSummaryItem();
@@ -810,6 +847,7 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       (findGame() as MyFlameGame).camera.viewfinder.position.y
     );
     (findGame() as MyFlameGame).detailViewingItem.value = item;
+    (findGame() as MyFlameGame).currentColor.value = Colors.white;
   }
 
   void relaxCamera(){

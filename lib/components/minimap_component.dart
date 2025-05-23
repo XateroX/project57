@@ -124,7 +124,7 @@ class MyMinimapComponent extends PositionComponent with TapCallbacks {
       removeAll(children);
       _addChildComponents();
     }
-    currentRoomPositionindex = gameData.currentRoomPositionindex;
+    currentRoomPositionindex = gameData.currentRoomPositionindex.value;
   }
 
 

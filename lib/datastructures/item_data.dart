@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:project57/utils/geometry.dart';
@@ -139,35 +140,35 @@ class GameItem extends ChangeNotifier {
       name: "Iron Pot",
       isMachine: true,
       processingKind: ProcessingType.BOILED,
-      processingDuration: 30*10,
+      processingDuration: 100,
     ),
     GameItem(
       parentTable: null,
       name: "P&M",
       isMachine: true,
       processingKind: ProcessingType.GROUND,
-      processingDuration: 6*60,
+      processingDuration: 100,
     ),
     GameItem(
       parentTable: null,
       name: "Stove",
       isMachine: true,
       processingKind: ProcessingType.COOKED,
-      processingDuration: 5*60,
+      processingDuration: 200,
     ),
     GameItem(
       parentTable: null,
       name: "Cooler",
       isMachine: true,
       processingKind: ProcessingType.COOLED,
-      processingDuration: 10*60,
+      processingDuration: 200,
     ),
     GameItem(
       parentTable: null,
       name: "Bath",
       isMachine: true,
       processingKind: ProcessingType.BATHE,
-      processingDuration: 60*60,
+      processingDuration: 300,
     ),
   ];
 
@@ -229,7 +230,7 @@ class GameItem extends ChangeNotifier {
       case ProcessingType.GROUND:
         return v64.Vector4(0.0,0.1,0.0,0.5);
       case ProcessingType.COOKED:
-        return v64.Vector4(0.0,0.5,0.0,0.0);
+        return v64.Vector4(0.0,1.0,0.0,0.0);
       case ProcessingType.COOLED:
         return v64.Vector4(0.0,-1.0,0.0,-0.5);
       case ProcessingType.BATHE:
@@ -237,6 +238,12 @@ class GameItem extends ChangeNotifier {
       case ProcessingType.NONE:
         return v64.Vector4(0,0,0,0);
       }
+  }
+
+  void decayStateVector(){
+    if (stateVector[1].abs() > 0.1){
+      stateVector[1] = stateVector[1]*(1-0.0005*(1/(1+stateVector[3].abs())));
+    }
   }
 
 
@@ -326,6 +333,7 @@ class GameItem extends ChangeNotifier {
     Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
     for (GameItem item in tempItemsBeingProcessed){
       v64.Vector4 processingVector = _getProcessingVector().scaled((1+item.stateVector[3])/(processingDuration));
+      processingVector[3] = processingVector[3] * (1/(1+item.stateVector[3])); // non-exponential groundness
       item.stateVector.add(processingVector);
 
       if (processingRatio >= 1.0){
@@ -362,6 +370,8 @@ class GameItem extends ChangeNotifier {
       } else {
         processingRatio = 0.0;
       }
+    } else {
+      decayStateVector();
     }
   }
   //  //
@@ -378,5 +388,10 @@ class GameItem extends ChangeNotifier {
       processingKind: processingKind,
       processingDuration: processingDuration
     );
+  }
+
+  destroy(){
+    parentTable!.removeItem(this);
+    notifyListeners();
   }
 }

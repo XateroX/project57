@@ -13,7 +13,7 @@ class GameOverallData extends ChangeNotifier {
   Set<Tuple2<int,int>> roomLocations = {};
   List<GameRoomData> rooms = [];
   int currentRoomIndex = 0;
-  int currentRoomPositionindex = 0;
+  ValueNotifier<int> currentRoomPositionindex = ValueNotifier(0);
   GameCarryTray carryTray = GameCarryTray();
 
   Timer? gameTickTimer;
@@ -91,7 +91,7 @@ class GameOverallData extends ChangeNotifier {
       initialRoom.addListener(notifyListeners);
       rooms.add(initialRoom);
       currentRoomIndex = 0;
-      currentRoomPositionindex = 0;
+      currentRoomPositionindex.value = 0;
       roomLocations.add(Tuple2(0,0));
     }
   }
@@ -139,7 +139,7 @@ class GameOverallData extends ChangeNotifier {
   }
 
   void setCurrentRoomPositionindex(int newIndex){
-    currentRoomPositionindex = newIndex;
+    currentRoomPositionindex.value = newIndex;
     notifyListeners();
   }
 
@@ -157,5 +157,31 @@ class GameOverallData extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+
+  // INGREDIENT MECHANICS //
+  void combineItems(List<GameItem> itemsToCombine) {
+    if (itemsToCombine.length < 2)return;
+
+    String name = "";
+    for (GameItem item in itemsToCombine) {
+      name += "${item.name.substring(0,2).toUpperCase()}${itemsToCombine.indexOf(item) == itemsToCombine.length-1 ? "" : "-"}";
+      item.destroy();
+    }
+
+    GameTable newParentTable = itemsToCombine[0].parentTable!;
+
+    GameItem newItem = GameItem(
+      parentTable: newParentTable,
+      relativeRotationIndex: itemsToCombine[0].relativeRotationIndex,
+      name: name,
+      isMachine: false,
+    );
+
+    newParentTable.addItem(newItem);
+    newItem.pos = itemsToCombine[0].pos;
+    print("");
+  }
+  // //
 }
 

@@ -8,6 +8,7 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:project57/components/carry_tray_component.dart';
+import 'package:project57/components/hud_component.dart';
 import 'package:project57/components/item_summary_component.dart';
 import 'package:project57/components/minimap_component.dart';
 import 'package:project57/components/table_component.dart';
@@ -34,6 +35,12 @@ class MyFlameGame extends FlameGame
   GameOverallData gameData = GameOverallData();
 
   ValueNotifier<List<Vector2>> listOfCandlePositions = ValueNotifier([]);
+
+  bool combineMode = false;
+  final ValueNotifier<List<GameItem>> itemsToCombine = ValueNotifier([]);
+
+  ValueNotifier<Color> currentColor = ValueNotifier(Colors.transparent);
+  ValueNotifier<String> currentHUDText = ValueNotifier("");
 
   @override
   Future<void> onLoad() async {
@@ -70,7 +77,7 @@ class MyFlameGame extends FlameGame
       setCurrentRoomPositionindex: gameData.setCurrentRoomPositionindex,
       roomsData: gameData.rooms,
       currentRoomIndex: gameData.currentRoomIndex,
-      currentRoomPositionindex: gameData.currentRoomPositionindex,
+      currentRoomPositionindex: gameData.currentRoomPositionindex.value,
       size: Vector2(squareSize/2, squareSize/2),
       position: Vector2(-width/10, height/4),
       showGridOverlay: false,
@@ -80,7 +87,7 @@ class MyFlameGame extends FlameGame
       gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(-4*squareSize/10),-3*squareSize/60),
-      tableIndex: gameData.currentRoomPositionindex,
+      tableIndex: gameData.currentRoomPositionindex.value,
       relativeRotationIndex: 0,
       showGridOverlay: false
     );
@@ -89,7 +96,7 @@ class MyFlameGame extends FlameGame
       gameData: gameData,
       size: Vector2(3*squareSize/5,3*squareSize/5),
       position: Vector2(1.1*(4*squareSize/10),-3*squareSize/60),
-      tableIndex: (gameData.currentRoomPositionindex+1)%4,
+      tableIndex: (gameData.currentRoomPositionindex.value+1)%4,
       relativeRotationIndex: 1,
       showGridOverlay: false
     );
@@ -115,14 +122,14 @@ class MyFlameGame extends FlameGame
     world.add(table2);
     world.add(itemSummary);
 
+    world.add(BorderHud(
+      size: Vector2(width, height),
+    ));
+
     // Listen to changes and update table indices
-    gameData.addListener(() {
-      table1.updateTableIndex(gameData.currentRoomPositionindex);
-      table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
-    });
-    gameData.addListener(() {
-      table1.updateTableIndex(gameData.currentRoomPositionindex);
-      table2.updateTableIndex((gameData.currentRoomPositionindex + 1) % 4);
+    gameData.currentRoomPositionindex.addListener(() {
+      table1.updateTableIndex(gameData.currentRoomPositionindex.value);
+      table2.updateTableIndex((gameData.currentRoomPositionindex.value + 1) % 4);
     });
 
     // camera.postProcess = PostProcessGroup(
@@ -168,7 +175,7 @@ class MyFlameGame extends FlameGame
       targetZoom = 1.0;
     }
 
-    if (currentT - lastT > 1.0){
+    if (currentT - lastT > 0.1){
       _checkMachinesForInputs();
       lastT = currentT;
     }
@@ -201,11 +208,32 @@ class MyFlameGame extends FlameGame
   ) {
     super.onKeyEvent(event, keysPressed);
 
-    if (event.logicalKey == LogicalKeyboardKey.space) {
-      targetZoom = 1.0;
-      targetPosition.value = Vector2(0,height/15);
-      detailViewingItem.value = null;
-      return KeyEventResult.handled;
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.space) {
+        targetZoom = 1.0;
+        targetPosition.value = Vector2(0,height/15);
+        detailViewingItem.value = null;
+        (findGame() as MyFlameGame).currentColor.value = Colors.transparent;
+        return KeyEventResult.handled;
+      }
+
+      if (event.logicalKey == LogicalKeyboardKey.keyC) {
+        combineMode = !combineMode;
+        itemsToCombine.value = [];
+        currentColor.value = combineMode ? Colors.purple : Colors.transparent;
+        currentHUDText.value = combineMode ? "Combining Mode" : "";
+        return KeyEventResult.handled;
+      }
+
+      if (event.logicalKey == LogicalKeyboardKey.enter) {
+        if (combineMode){
+          combineMode = false;
+          currentColor.value = Colors.transparent;
+          currentHUDText.value = "";
+          gameData.combineItems(itemsToCombine.value);
+        }
+        return KeyEventResult.handled;
+      }
     }
 
     return KeyEventResult.ignored;

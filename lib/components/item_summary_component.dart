@@ -257,7 +257,7 @@ class MyItemSummaryComponent extends PositionComponent {
 
     TextPainter textPainter = TextPainter(
       text: TextSpan(
-        text: "${(summaryItem!.stateVector.x).toStringAsFixed(1)}, ${(summaryItem!.stateVector.y).toStringAsFixed(1)}",
+        text: "${summaryItem!.stateVector.x.toStringAsFixed(2)}, ${summaryItem!.stateVector.y.toStringAsFixed(2)}",
         style: TextStyle(
           color: Colors.black,
           fontSize: width / 50,
