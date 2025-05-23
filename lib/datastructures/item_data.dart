@@ -14,6 +14,7 @@ enum ProcessingType {
   BOILED,
   COOKED,
   COOLED,
+  BATHE,
 }
 
 extension ProcessingTypeExtension on ProcessingType {
@@ -29,6 +30,8 @@ extension ProcessingTypeExtension on ProcessingType {
         return "Cooked";
       case ProcessingType.COOLED:
         return "Cooled";
+      case ProcessingType.BATHE:
+        return "Bathe";
       default:
         return "None";
     }
@@ -46,6 +49,8 @@ extension ProcessingTypeExtension on ProcessingType {
         return Colors.red;
       case ProcessingType.COOLED:
         return Colors.purple;
+      case ProcessingType.BATHE:
+        return Colors.lightGreen;
       default:
         return Colors.grey;
     }
@@ -62,6 +67,8 @@ extension ProcessingTypeExtension on ProcessingType {
       case ProcessingType.COOKED:
         return 1;
       case ProcessingType.COOLED:
+        return 1;
+      case ProcessingType.BATHE:
         return 1;
       default:
         return 0;
@@ -155,6 +162,13 @@ class GameItem extends ChangeNotifier {
       processingKind: ProcessingType.COOLED,
       processingDuration: 10*60,
     ),
+    GameItem(
+      parentTable: null,
+      name: "Bath",
+      isMachine: true,
+      processingKind: ProcessingType.BATHE,
+      processingDuration: 60*60,
+    ),
   ];
 
   late String id;
@@ -218,6 +232,8 @@ class GameItem extends ChangeNotifier {
         return v64.Vector4(0.0,0.5,0.0,0.0);
       case ProcessingType.COOLED:
         return v64.Vector4(0.0,-1.0,0.0,-0.5);
+      case ProcessingType.BATHE:
+        return v64.Vector4(1.0,0.0,0.0,0.0);
       case ProcessingType.NONE:
         return v64.Vector4(0,0,0,0);
       }
@@ -310,7 +326,7 @@ class GameItem extends ChangeNotifier {
     Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
     for (GameItem item in tempItemsBeingProcessed){
       v64.Vector4 processingVector = _getProcessingVector().scaled((1+item.stateVector[3])/(processingDuration));
-      item.stateVector.add(processingVector); 
+      item.stateVector.add(processingVector);
 
       if (processingRatio >= 1.0){
         item.setPos(Tuple2(pos.item1+relativeOutputOffset.item1, pos.item2+relativeOutputOffset.item2));
