@@ -136,6 +136,8 @@ class MyFlameGame extends FlameGame
     //     ),
     //   ],
     // );
+
+    gameData.startGameTicks();
   } 
 
   ValueNotifier<Vector2?> targetPosition = ValueNotifier(null);

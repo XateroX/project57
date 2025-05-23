@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:project57/datastructures/carry_tray_data.dart';
 import 'package:project57/datastructures/game_room_data.dart';
+import 'package:project57/datastructures/item_data.dart';
 import 'package:project57/datastructures/table_data.dart';
 import 'package:tuple/tuple.dart';
 
@@ -14,8 +16,71 @@ class GameOverallData extends ChangeNotifier {
   int currentRoomPositionindex = 0;
   GameCarryTray carryTray = GameCarryTray();
 
+  Timer? gameTickTimer;
+  List<DateTime> lastTimes = [];
+
+  bool debugMode = false;
+
   GameOverallData(){
     carryTray.addListener(notifyListeners);
+
+    lastTimes.add(DateTime.now());
+  }
+
+  void _executeGameTick(Timer gameTimer){
+    _gameTick();
+
+    if (debugMode){
+      lastTimes.add(DateTime.now());
+
+      if (lastTimes.length > 1001) lastTimes.removeAt(0);
+
+      int numEntries = lastTimes.length;
+      if (numEntries > 1000) {
+        double average10 = 0;
+        double average100 = 0;
+        double average1000 = 0;
+
+        for (int i = 1; i <= min(10, numEntries); i++) {
+          average10 += lastTimes[numEntries - i].difference(lastTimes[numEntries - i - 1]).inMilliseconds.toDouble();
+        }
+        average10 /= min(10, numEntries);
+
+        for (int i = 1; i <= min(100, numEntries); i++) {
+          average100 += lastTimes[numEntries - i].difference(lastTimes[numEntries - i - 1]).inMilliseconds.toDouble();
+        }
+        average100 /= min(100, numEntries);
+
+        for (int i = 1; i <= min(1000, numEntries); i++) {
+          average1000 += lastTimes[numEntries - i].difference(lastTimes[numEntries - i - 1]).inMilliseconds.toDouble();
+        }
+        average1000 /= min(1000, numEntries);
+
+        print("Average of last 10: ${average10.toStringAsFixed(2)}ms");
+        print("Average of last 100: ${average100.toStringAsFixed(2)}ms");
+        print("Average of last 1000: ${average1000.toStringAsFixed(2)}ms");
+      }
+    }
+  }
+
+  void _gameTick(){
+    if (gameTickTimer != null){
+      for (GameRoomData room in rooms){
+        for (GameTable table in room.tables){
+          for (GameItem item in table.childItems){
+            item.gameTick();
+          }
+        }
+      }
+    }
+  }
+
+  void startGameTicks(){
+    gameTickTimer = Timer.periodic(Duration(milliseconds: 10), _executeGameTick);
+  }
+
+  void stopGameTicks(){
+    gameTickTimer?.cancel();
   }
 
   void addInitialroom(){

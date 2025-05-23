@@ -304,12 +304,12 @@ class GameItem extends ChangeNotifier {
     return shouldBeRecursive;
   }
 
-  void processMyItems(double dt){
+  void processMyItems(){
     List<GameItem> tempItemsBeingProcessed = [...itemsBeingProcessed];
 
     Tuple2<int,int> relativeOutputOffset = relativeRotationTuple(outputOffset, relativeRotationIndex);
     for (GameItem item in tempItemsBeingProcessed){
-      v64.Vector4 processingVector = _getProcessingVector().scaled((1+stateVector[3])/(5*processingDuration));
+      v64.Vector4 processingVector = _getProcessingVector().scaled((1+stateVector[3])/(processingDuration));
       item.stateVector.add(processingVector); 
 
       if (processingRatio >= 1.0){
@@ -330,6 +330,25 @@ class GameItem extends ChangeNotifier {
   ){
     return Future.delayed(duration, processCompletedCallback);
   }
+
+  // LOOPING GAMEPLAY FUNCTIONS //
+  void gameTick(){
+    if (isMachine){
+      if (currentlyProcessing){
+        if (processingRatio < 1.0){
+          processingRatio += 1/processingDuration;
+          if (processingRatio > 1.0){
+            processingRatio = 1.0;
+          }
+          processMyItems();
+          notifyListeners();
+        }
+      } else {
+        processingRatio = 0.0;
+      }
+    }
+  }
+  //  //
 
   GameItem copy(){
     return GameItem(

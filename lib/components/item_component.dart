@@ -97,6 +97,8 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       }
     }
 
+    machineProgressRatio = item.processingRatio;
+
     position = Vector2(positionOffset.dx,positionOffset.dy);
   }
 
@@ -114,22 +116,6 @@ class MyItemComponent extends PositionComponent with DragCallbacks, KeyboardHand
       ghostOpacity = 0.0;
     } else {
       ghostOpacity = ghostOpacity + (1.0 - ghostOpacity) * 3.0 * dt;
-    }
-
-    if (item.isMachine){
-      if (item.currentlyProcessing){
-        if (machineProgressRatio < 1.0){
-          machineProgressRatio += 1/item.processingDuration;
-          if (machineProgressRatio > 1.0){
-            machineProgressRatio = 1.0;
-          }
-          item.processingRatio = machineProgressRatio;
-          item.processMyItems(dt);
-        }
-      } else {
-        machineProgressRatio = 0.0;
-        item.processingRatio = 0.0;
-      }
     }
   }
 
